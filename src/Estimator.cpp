@@ -46,13 +46,30 @@ arma::colvec Union(const arma::colvec &a, arma::colvec b) {
 }
 
 
+// Truncate
+//
+// @param time Vector of time points.
+// @param tau Truncation time.
+// @return Truncated vector.
+arma::colvec Truncate(const arma::colvec &time, const double tau) {
+  arma::colvec unique_times = arma::unique(time);
+  for(int i=0; i<unique_times.size(); i++){
+    if(unique_times(i) > tau){
+      unique_times(i) = tau;
+    }
+  }
+  arma::colvec out = arma::unique(unique_times);
+  return out;
+}
+
+
 // ----------------------------------------------------------------------------
 // Value matrix.
 // ----------------------------------------------------------------------------
 
 //' Tabulate Value Matrix R
 //'
-//' Construct a subject (row) by unique time (col) matrix.
+//' Construct a subject (row) by evluation time (col) matrix.
 //'  
 //' @param eval_times Evaluation times.
 //' @param idx Unique subject index. 
@@ -92,33 +109,48 @@ SEXP ValueMatrixR(
     int pointer = 0;
     double change_time = subj_times(pointer);
     
-    // Initialize: the current value is zero until updated.
-    double current_status = 0;
-    double current_value = 0;
+    // Initialize.
+    double current_value = subj_values(pointer);
+    double current_status;
     
     // Loop over unique times.
     for(int j=0; j<n_times; j++) {
-      
+
       double utime = eval_times(j);
       
       if(utime >= change_time) {
         
+        // If the current status is an event, update value before storing.
+        // If the current status is censuroing or failure, update value after storing.
         current_status = subj_status(pointer);
         if (current_status == 1.0) {
+
           current_value = subj_values(pointer);
+          y(i, j) = current_value;
+
         } else {
+
+          y(i, j) = current_value;
           current_value = 0;
+
         }
         
         pointer += 1;
+
+        // Break when subject's last time is reached.
         if(pointer == subj_times.size()){
           break;
         }
+
         change_time = subj_times(pointer);
+
+      } else {
+
+        // If not a change time, carry last value forward.
+        y(i, j) = current_value;
+
       }
-      
-      y(i, j) = current_value;
-      
+
     }
   }
   return Rcpp::wrap(y);
@@ -168,32 +200,52 @@ arma::mat ValueMatrixCpp(
     int pointer = 0;
     double change_time = subj_times(pointer);
     
-    // Initialize: the current value is zero until updated.
-    double current_status = 0;
-    double current_value = 0;
+    // Initialize.
+    double current_value = subj_values(pointer);
+    double current_status;
     
     // Loop over evaluation times.
     for(int j=0; j<n_times; j++) {
       
+      // Store current_value *before* updating.
+      // This causes the subject to contribute to the value sum at the
+      // time point at which they are removed from the risk set.
+      y(i, j) = current_value;
+
       double utime = eval_times(j);
       
       if(utime >= change_time) {
         
+        // If the current status is an event, update value before storing.
+        // If the current status is censuroing or failure, update value after storing.
         current_status = subj_status(pointer);
         if (current_status == 1.0) {
+
           current_value = subj_values(pointer);
+          y(i, j) = current_value;
+
         } else {
+
+          y(i, j) = current_value;
           current_value = 0;
+
         }
         
         pointer += 1;
+
+        // Break when subject's last time is reached.
         if(pointer == subj_times.size()){
           break;
         }
+
         change_time = subj_times(pointer);
+
+      } else {
+
+        // If not a change time, carry last value forward.
+        y(i, j) = current_value;
+
       }
-      
-      y(i, j) = current_value;
       
     }
   }
@@ -379,9 +431,12 @@ arma::mat KaplanMeierCpp(
 //' @param status Status, coded as 0 for censoring, 1 for event. 
 //' @param time Observation time.
 //' @param value Observation value.
-//' @param eval_times Times at which to evaluate the estimator.
-//' @param replace_na Replace NaN with zero?
-//' @param return_auc Return the AUC?
+//' @param eval_times Evalulation times. If omitted, defaults to the
+//' unique values of time.
+//' @param replace_na Replace NaN with zero? Default: FALSE.
+//' @param return_auc Return the AUC? Default: FALSE.
+//' @param trunc_time Truncation time? Optional. If omitted, defaults
+//' to the maximum evaluation time.
 //' @return Data.frame.
 //' @export 
 // [[Rcpp::export]]
@@ -393,7 +448,8 @@ SEXP EstimatorR(
   const arma::colvec value,
   const Rcpp::Nullable<Rcpp::NumericVector> eval_times=R_NilValue,
   const bool replace_na=false,
-  const bool return_auc=false
+  const bool return_auc=false,
+  const Rcpp::Nullable<double> trunc_time=R_NilValue
 ){
 
   // Unique times.
@@ -405,6 +461,11 @@ SEXP EstimatorR(
   } else {
     unique_times = arma::unique(time);
   }
+
+  if(trunc_time.isNotNull()) {
+    double tau = Rcpp::as<double>(trunc_time);
+    unique_times = Truncate(unique_times, tau);
+  } 
   const int n_times = unique_times.size();
 
   // Construct a subject (row) by evaluation time (col) matrix.
@@ -456,7 +517,7 @@ SEXP EstimatorR(
 // If AUC is requested, returns 1x1 AUC. Otherwise, returns the estimator
 // at each evaluation time.
 //  
-// @param eval_times Times at which to evaluate the estimator.
+// @param eval_times Evaluation times.
 // @param idx Unique subject index. 
 // @param status Status, coded as 0 for censoring, 1 for event. 
 // @param time Observation time.
@@ -466,16 +527,18 @@ SEXP EstimatorR(
 // @return Numeric vector.
 
 arma::colvec EstimatorCpp(
-  const arma::colvec eval_times,
+  arma::colvec eval_times,
   const arma::colvec idx,
   const arma::colvec status,
   const arma::colvec time,
+  const double trunc_time,
   const arma::colvec value,
   const bool replace_na=false,
   const bool return_auc=false
 ){
 
   // Evaluation times.
+  eval_times = Truncate(eval_times, trunc_time);
   const int n_times = eval_times.size();
 
   // Construct a subject (row) by evaluation time (col) matrix.
@@ -607,6 +670,10 @@ arma::mat DrawBootstrapCpp(
 
 
 //' Bootstrap Samples R
+//'
+//' Returns a bootstrap (row) by statistic (col) matrix. If \code{return_auc = TRUE},
+//' the output has a single column, the AUC. If \code{return_auc = FALSE}, the output
+//' has a single column for each evaluation time.
 //'  
 //' @param boot Bootstrap replicates.
 //' @param eval_times Evaluation times.
@@ -614,20 +681,33 @@ arma::mat DrawBootstrapCpp(
 //' @param status Status, coded as 0 for censoring, 1 for event. 
 //' @param time Observation time.
 //' @param value Observation value.
+//' @param replace_na Replace NaN with zero?
 //' @param return_auc Return the AUC?
+//' @param trunc_time Truncation time? Optional. If omitted, defaults
+//' to the maximum evaluation time.
 //' @return Numeric matrix.
 //' @export
 // [[Rcpp::export]]
 
 SEXP BootstrapSamplesR(
   const int boot,
-  const arma::colvec eval_times,
+  arma::colvec eval_times,
   const arma::colvec idx,
   const arma::colvec status,
   const arma::colvec time,
   const arma::colvec value,
-  const bool return_auc=false
+  const bool replace_na=false,
+  const bool return_auc=false,
+  const Rcpp::Nullable<double> trunc_time=R_NilValue
 ){
+  
+  double tau;
+  if(trunc_time.isNotNull()) {
+    tau = Rcpp::as<double>(trunc_time);
+    eval_times = Truncate(eval_times, tau);
+  } else {
+    tau = eval_times.max();
+  }
 
   if(return_auc) {
 
@@ -641,8 +721,10 @@ SEXP BootstrapSamplesR(
         boot_data.col(0),
         boot_data.col(1),
         boot_data.col(2),
-        boot_data.col(3), 
-        true
+        tau,
+        boot_data.col(3),
+        replace_na, 
+        return_auc
       );
 
       samples(b) = auc(0);
@@ -664,15 +746,17 @@ SEXP BootstrapSamplesR(
         boot_data.col(0),
         boot_data.col(1),
         boot_data.col(2),
-        boot_data.col(3), 
-        false
+        tau,
+        boot_data.col(3),
+        replace_na, 
+        return_auc
       );
 
       samples.col(b) = exp;
 
     }
 
-  return Rcpp::wrap(samples);
+  return Rcpp::wrap(arma::trans(samples));
 
   }
 }

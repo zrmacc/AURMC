@@ -11,7 +11,8 @@ EstimatorR(
   value,
   eval_times = NULL,
   replace_na = FALSE,
-  return_auc = FALSE
+  return_auc = FALSE,
+  trunc_time = NULL
 )
 }
 \arguments{
@@ -23,11 +24,15 @@ EstimatorR(
 
 \item{value}{Observation value.}
 
-\item{eval_times}{Times at which to evaluate the estimator.}
+\item{eval_times}{Evalulation times. If omitted, defaults to the
+unique values of time.}
 
-\item{replace_na}{Replace NaN with zero?}
+\item{replace_na}{Replace NaN with zero? Default: FALSE.}
 
-\item{return_auc}{Return the AUC?}
+\item{return_auc}{Return the AUC? Default: FALSE.}
+
+\item{trunc_time}{Truncation time? Optional. If omitted, defaults
+to the maximum evaluation time.}
 }
 \value{
 Data.frame.

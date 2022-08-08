@@ -18,9 +18,9 @@ test_that("Test value tabulation.", {
   
   # Expected.
   exp <- rbind(
-    c(1, 0, 0, 0, 0, 0),
-    c(1, 1, 2, 0, 0, 0),
-    c(1, 1, 2, 2, 3, 0)
+    c(1, 1, 0, 0, 0, 0),
+    c(1, 1, 2, 2, 0, 0),
+    c(1, 1, 2, 2, 3, 3)
   )
   
   expect_equal(obs, exp)

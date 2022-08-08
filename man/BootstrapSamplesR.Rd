@@ -11,7 +11,9 @@ BootstrapSamplesR(
   status,
   time,
   value,
-  return_auc = FALSE
+  replace_na = FALSE,
+  return_auc = FALSE,
+  trunc_time = NULL
 )
 }
 \arguments{
@@ -27,11 +29,18 @@ BootstrapSamplesR(
 
 \item{value}{Observation value.}
 
+\item{replace_na}{Replace NaN with zero?}
+
 \item{return_auc}{Return the AUC?}
+
+\item{trunc_time}{Truncation time? Optional. If omitted, defaults
+to the maximum evaluation time.}
 }
 \value{
 Numeric matrix.
 }
 \description{
-Bootstrap Samples R
+Returns a bootstrap (row) by statistic (col) matrix. If \code{return_auc = TRUE},
+the output has a single column, the AUC. If \code{return_auc = FALSE}, the output
+has a single column for each evaluation time.
 }

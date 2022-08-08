@@ -3,7 +3,7 @@
 
 #' Tabulate Value Matrix R
 #'
-#' Construct a subject (row) by unique time (col) matrix.
+#' Construct a subject (row) by evluation time (col) matrix.
 #'  
 #' @param eval_times Evaluation times.
 #' @param idx Unique subject index. 
@@ -36,13 +36,16 @@ KaplanMeierR <- function(eval_times, idx, status, time) {
 #' @param status Status, coded as 0 for censoring, 1 for event. 
 #' @param time Observation time.
 #' @param value Observation value.
-#' @param eval_times Times at which to evaluate the estimator.
-#' @param replace_na Replace NaN with zero?
-#' @param return_auc Return the AUC?
+#' @param eval_times Evalulation times. If omitted, defaults to the
+#' unique values of time.
+#' @param replace_na Replace NaN with zero? Default: FALSE.
+#' @param return_auc Return the AUC? Default: FALSE.
+#' @param trunc_time Truncation time? Optional. If omitted, defaults
+#' to the maximum evaluation time.
 #' @return Data.frame.
 #' @export 
-EstimatorR <- function(idx, status, time, value, eval_times = NULL, replace_na = FALSE, return_auc = FALSE) {
-    .Call(`_AURMC_EstimatorR`, idx, status, time, value, eval_times, replace_na, return_auc)
+EstimatorR <- function(idx, status, time, value, eval_times = NULL, replace_na = FALSE, return_auc = FALSE, trunc_time = NULL) {
+    .Call(`_AURMC_EstimatorR`, idx, status, time, value, eval_times, replace_na, return_auc, trunc_time)
 }
 
 #' Draw Bootstrap R
@@ -57,6 +60,10 @@ DrawBootstrapR <- function(idx, status, time, value) {
 }
 
 #' Bootstrap Samples R
+#'
+#' Returns a bootstrap (row) by statistic (col) matrix. If \code{return_auc = TRUE},
+#' the output has a single column, the AUC. If \code{return_auc = FALSE}, the output
+#' has a single column for each evaluation time.
 #'  
 #' @param boot Bootstrap replicates.
 #' @param eval_times Evaluation times.
@@ -64,10 +71,13 @@ DrawBootstrapR <- function(idx, status, time, value) {
 #' @param status Status, coded as 0 for censoring, 1 for event. 
 #' @param time Observation time.
 #' @param value Observation value.
+#' @param replace_na Replace NaN with zero?
 #' @param return_auc Return the AUC?
+#' @param trunc_time Truncation time? Optional. If omitted, defaults
+#' to the maximum evaluation time.
 #' @return Numeric matrix.
 #' @export
-BootstrapSamplesR <- function(boot, eval_times, idx, status, time, value, return_auc = FALSE) {
-    .Call(`_AURMC_BootstrapSamplesR`, boot, eval_times, idx, status, time, value, return_auc)
+BootstrapSamplesR <- function(boot, eval_times, idx, status, time, value, replace_na = FALSE, return_auc = FALSE, trunc_time = NULL) {
+    .Call(`_AURMC_BootstrapSamplesR`, boot, eval_times, idx, status, time, value, replace_na, return_auc, trunc_time)
 }
 

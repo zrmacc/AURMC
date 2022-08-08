@@ -21,5 +21,5 @@ ValueMatrixR(eval_times, idx, status, time, value)
 Numeric matrix.
 }
 \description{
-Construct a subject (row) by unique time (col) matrix.
+Construct a subject (row) by evluation time (col) matrix.
 }
