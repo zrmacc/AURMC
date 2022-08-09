@@ -4,14 +4,12 @@
 \alias{ValueMatrixR}
 \title{Tabulate Value Matrix R}
 \usage{
-ValueMatrixR(eval_times, idx, status, time, value)
+ValueMatrixR(eval_times, idx, time, value)
 }
 \arguments{
 \item{eval_times}{Evaluation times.}
 
 \item{idx}{Unique subject index.}
-
-\item{status}{Status, 0 for censoring, 1 for event, 2 for death.}
 
 \item{time}{Observation time.}
 

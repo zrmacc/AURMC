@@ -73,7 +73,6 @@ arma::colvec Truncate(const arma::colvec &time, const double tau) {
 //'  
 //' @param eval_times Evaluation times.
 //' @param idx Unique subject index. 
-//' @param status Status, 0 for censoring, 1 for event, 2 for death.
 //' @param time Observation time.
 //' @param value Observation value.
 //' @return Numeric matrix.
@@ -83,7 +82,6 @@ arma::colvec Truncate(const arma::colvec &time, const double tau) {
 SEXP ValueMatrixR(
     const arma::colvec eval_times,
     const arma::colvec idx,
-    const arma::colvec status,
     const arma::colvec time,
     const arma::colvec value
 ){
@@ -102,55 +100,30 @@ SEXP ValueMatrixR(
     
     // Time, status, and values for the focus subject.
     arma::colvec subj_times = time.elem(arma::find(idx == unique_idx(i)));
-    arma::colvec subj_status = status.elem(arma::find(idx == unique_idx(i)));
     arma::colvec subj_values = value.elem(arma::find(idx == unique_idx(i)));
     
-    // Time at which to change the current values.
-    int pointer = 0;
-    double change_time = subj_times(pointer);
-    
-    // Initialize.
-    double current_value = subj_values(pointer);
-    double current_status;
-    
     // Loop over unique times.
+    double current_value = 0;
+    double next_value = 0;
     for(int j=0; j<n_times; j++) {
 
       double utime = eval_times(j);
-      
-      if(utime >= change_time) {
-        
-        // If the current status is an event, update value before storing.
-        // If the current status is censuroing or failure, update value after storing.
-        current_status = subj_status(pointer);
-        if (current_status == 1.0) {
 
-          current_value = subj_values(pointer);
-          y(i, j) = current_value;
-
-        } else {
-
-          y(i, j) = current_value;
-          current_value = 0;
-
-        }
-        
-        pointer += 1;
-
-        // Break when subject's last time is reached.
-        if(pointer == subj_times.size()){
-          break;
-        }
-
-        change_time = subj_times(pointer);
-
-      } else {
-
-        // If not a change time, carry last value forward.
-        y(i, j) = current_value;
-
+      if (arma::any(subj_times <= utime)) {
+        next_value = arma::as_scalar(
+          subj_values.elem(arma::find(subj_times <= utime, 1, "last"))
+        );
       }
 
+      if (not std::isnan(next_value)) {
+        current_value = next_value;
+      }
+
+      y(i,j) = current_value;
+
+      if (arma::all(subj_times <= utime)) {
+        break;
+      }
     }
   }
   return Rcpp::wrap(y);
@@ -166,7 +139,6 @@ SEXP ValueMatrixR(
 //  
 // @param eval_times Evaluation times.
 // @param idx Unique subject index. 
-// @param status Status, 0 for censoring, 1 for event, 2 for death.
 // @param time Observation time.
 // @param value Observation value.
 // @return Numeric matrix.
@@ -174,7 +146,6 @@ SEXP ValueMatrixR(
 arma::mat ValueMatrixCpp(
     const arma::colvec eval_times,
     const arma::colvec idx,
-    const arma::colvec status,
     const arma::colvec time,
     const arma::colvec value
 ){
@@ -193,60 +164,30 @@ arma::mat ValueMatrixCpp(
     
     // Time, status, and values for the focus subject.
     arma::colvec subj_times = time.elem(arma::find(idx == unique_idx(i)));
-    arma::colvec subj_status = status.elem(arma::find(idx == unique_idx(i)));
     arma::colvec subj_values = value.elem(arma::find(idx == unique_idx(i)));
     
-    // Time at which to change the current values.
-    int pointer = 0;
-    double change_time = subj_times(pointer);
-    
-    // Initialize.
-    double current_value = subj_values(pointer);
-    double current_status;
-    
-    // Loop over evaluation times.
+    // Loop over unique times.
+    double current_value = 0;
+    double next_value = 0;
     for(int j=0; j<n_times; j++) {
-      
-      // Store current_value *before* updating.
-      // This causes the subject to contribute to the value sum at the
-      // time point at which they are removed from the risk set.
-      y(i, j) = current_value;
 
       double utime = eval_times(j);
-      
-      if(utime >= change_time) {
-        
-        // If the current status is an event, update value before storing.
-        // If the current status is censuroing or failure, update value after storing.
-        current_status = subj_status(pointer);
-        if (current_status == 1.0) {
 
-          current_value = subj_values(pointer);
-          y(i, j) = current_value;
-
-        } else {
-
-          y(i, j) = current_value;
-          current_value = 0;
-
-        }
-        
-        pointer += 1;
-
-        // Break when subject's last time is reached.
-        if(pointer == subj_times.size()){
-          break;
-        }
-
-        change_time = subj_times(pointer);
-
-      } else {
-
-        // If not a change time, carry last value forward.
-        y(i, j) = current_value;
-
+      if (arma::any(subj_times <= utime)) {
+        next_value = arma::as_scalar(
+          subj_values.elem(arma::find(subj_times <= utime, 1, "last"))
+        );
       }
-      
+
+      if (not std::isnan(next_value)) {
+        current_value = next_value;
+      }
+
+      y(i,j) = current_value;
+
+      if (arma::all(subj_times <= utime)) {
+        break;
+      }
     }
   }
   return y;
@@ -469,7 +410,7 @@ SEXP EstimatorR(
   const int n_times = unique_times.size();
 
   // Construct a subject (row) by evaluation time (col) matrix.
-  arma::mat value_mat = ValueMatrixCpp(unique_times, idx, status, time, value);
+  arma::mat value_mat = ValueMatrixCpp(unique_times, idx, time, value);
 
   // Column sums.
   arma::colvec value_sums = arma::trans(arma::sum(value_mat, 0));
@@ -542,7 +483,7 @@ arma::colvec EstimatorCpp(
   const int n_times = eval_times.size();
 
   // Construct a subject (row) by evaluation time (col) matrix.
-  arma::mat value_mat = ValueMatrixCpp(eval_times, idx, status, time, value);
+  arma::mat value_mat = ValueMatrixCpp(eval_times, idx, time, value);
 
   // Column sums.
   arma::colvec value_sums = arma::trans(arma::sum(value_mat, 0));

@@ -7,13 +7,12 @@
 #'  
 #' @param eval_times Evaluation times.
 #' @param idx Unique subject index. 
-#' @param status Status, 0 for censoring, 1 for event, 2 for death.
 #' @param time Observation time.
 #' @param value Observation value.
 #' @return Numeric matrix.
 #' @export
-ValueMatrixR <- function(eval_times, idx, status, time, value) {
-    .Call(`_AURMC_ValueMatrixR`, eval_times, idx, status, time, value)
+ValueMatrixR <- function(eval_times, idx, time, value) {
+    .Call(`_AURMC_ValueMatrixR`, eval_times, idx, time, value)
 }
 
 #' Tabulate Kaplan Meier R
