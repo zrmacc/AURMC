@@ -519,7 +519,8 @@ arma::mat EstimatorCpp(
 
   } else {
 
-    arma::mat out = arma::join_rows(eval_times, y, surv, exp);
+    arma::mat out = arma::join_rows(eval_times, y, surv, value_means);
+    out = arma::join_rows(out, exp);
   	return out;
 
   }
@@ -698,7 +699,7 @@ SEXP BootstrapSamplesR(
         return_auc
       );
 
-      samples.col(b) = est.col(3);
+      samples.col(b) = est.col(4);
 
     }
 
@@ -734,8 +735,8 @@ SEXP InfluenceR(
 ){
   
   // Unique times.
-  arma::colvec utimes = arma::unique(time);
-  arma::colvec unique_times = Truncate(utimes, trunc_time);
+  arma::colvec unique_times = arma::unique(time);
+  unique_times = Truncate(unique_times, trunc_time);
   const int n_times = unique_times.size();
   
   // Construct a subject (row) by evaluation time (col) matrix.
@@ -753,6 +754,7 @@ SEXP InfluenceR(
     Rcpp::Named("time")=est.col(0),
     Rcpp::Named("y")=est.col(1),
     Rcpp::Named("surv")=est.col(2),
-    Rcpp::Named("d")=est.col(3)
+    Rcpp::Named("d")=est.col(3),
+    Rcpp::Named("exp")=est.col(4)
   );
 }
