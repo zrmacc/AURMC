@@ -90,6 +90,21 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// InfluenceR
+SEXP InfluenceR(const arma::colvec idx, const arma::colvec status, const arma::colvec time, const double trunc_time, const arma::colvec value);
+RcppExport SEXP _AURMC_InfluenceR(SEXP idxSEXP, SEXP statusSEXP, SEXP timeSEXP, SEXP trunc_timeSEXP, SEXP valueSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const arma::colvec >::type idx(idxSEXP);
+    Rcpp::traits::input_parameter< const arma::colvec >::type status(statusSEXP);
+    Rcpp::traits::input_parameter< const arma::colvec >::type time(timeSEXP);
+    Rcpp::traits::input_parameter< const double >::type trunc_time(trunc_timeSEXP);
+    Rcpp::traits::input_parameter< const arma::colvec >::type value(valueSEXP);
+    rcpp_result_gen = Rcpp::wrap(InfluenceR(idx, status, time, trunc_time, value));
+    return rcpp_result_gen;
+END_RCPP
+}
 
 static const R_CallMethodDef CallEntries[] = {
     {"_AURMC_ValueMatrixR", (DL_FUNC) &_AURMC_ValueMatrixR, 4},
@@ -97,6 +112,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_AURMC_EstimatorR", (DL_FUNC) &_AURMC_EstimatorR, 8},
     {"_AURMC_DrawBootstrapR", (DL_FUNC) &_AURMC_DrawBootstrapR, 4},
     {"_AURMC_BootstrapSamplesR", (DL_FUNC) &_AURMC_BootstrapSamplesR, 9},
+    {"_AURMC_InfluenceR", (DL_FUNC) &_AURMC_InfluenceR, 5},
     {NULL, NULL, 0}
 };
 

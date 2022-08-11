@@ -467,7 +467,7 @@ SEXP EstimatorR(
 // @param return_auc Return the AUC?
 // @return Numeric vector.
 
-arma::colvec EstimatorCpp(
+arma::mat EstimatorCpp(
   arma::colvec eval_times,
   const arma::colvec idx,
   const arma::colvec status,
@@ -478,26 +478,32 @@ arma::colvec EstimatorCpp(
   const bool return_auc=false
 ){
 
+  // Subjects.
+  const arma::colvec unique_idx = arma::unique(idx);
+  const int n = unique_idx.size();
+  
   // Evaluation times.
   eval_times = Truncate(eval_times, trunc_time);
   const int n_times = eval_times.size();
 
   // Construct a subject (row) by evaluation time (col) matrix.
   arma::mat value_mat = ValueMatrixCpp(eval_times, idx, time, value);
+  
+  // Rcpp::Rcout << value_mat << std::endl; 
 
   // Column sums.
-  arma::colvec value_sums = arma::trans(arma::sum(value_mat, 0));
+  arma::colvec value_means = arma::trans(arma::sum(value_mat, 0)) / n;
   
   // Construct Kaplan-Meier curve: evalulation time (row) by 2.
   arma::mat km_mat =  KaplanMeierCpp(eval_times, idx, status, time);
   if(replace_na) {
   	km_mat.replace(arma::datum::nan, 0);
   }
-  arma::colvec nar = km_mat.col(0);
+  arma::colvec y = km_mat.col(0) / n;
   arma::colvec surv = km_mat.col(1);
 
   // Expectation: E{D(t)}.
-  arma::colvec exp = surv % (value_sums / nar);
+  arma::colvec exp = surv % (value_means / y);
   if(replace_na) {
   	exp.replace(arma::datum::nan, 0);
   }
@@ -513,7 +519,8 @@ arma::colvec EstimatorCpp(
 
   } else {
 
-  	return exp;
+    arma::mat out = arma::join_rows(eval_times, y, surv, exp);
+  	return out;
 
   }
 }
@@ -544,9 +551,7 @@ SEXP DrawBootstrapR(
   const int n = unique_idx.size();
 
   // Bind columns to form matrix.
-  arma::mat data = arma::join_rows(idx, status);
-  data = arma::join_rows(data, time);
-  data = arma::join_rows(data, value);
+  arma::mat data = arma::join_rows(idx, status, time, value);
 
   // Bootstrap.
   arma::mat boot(0, 4);
@@ -587,9 +592,8 @@ arma::mat DrawBootstrapCpp(
   const int n = unique_idx.size();
 
   // Bind columns to form matrix.
-  arma::mat data = arma::join_rows(idx, status);
-  data = arma::join_rows(data, time);
-  data = arma::join_rows(data, value);
+  arma::mat data = arma::join_rows(idx, status, time, value);
+  
 
   // Bootstrap.
   arma::mat boot(0, 4);
@@ -682,7 +686,8 @@ SEXP BootstrapSamplesR(
     for(int b=0; b<boot; b++) {
 
       arma::mat boot_data = DrawBootstrapCpp(idx, status, time, value);
-      arma::mat exp = EstimatorCpp(
+      
+      arma::mat est = EstimatorCpp(
         eval_times,
         boot_data.col(0),
         boot_data.col(1),
@@ -693,11 +698,61 @@ SEXP BootstrapSamplesR(
         return_auc
       );
 
-      samples.col(b) = exp;
+      samples.col(b) = est.col(3);
 
     }
 
   return Rcpp::wrap(arma::trans(samples));
 
   }
+}
+
+
+// ----------------------------------------------------------------------------
+
+
+//' Influence Function R
+//' 
+//' Influence function contributions for the AUC.
+//'  
+//' @param idx Unique subject index. 
+//' @param status Status, coded as 0 for censoring, 1 for event. 
+//' @param time Observation time.
+//' @param trunc_time Truncation time? Optional. If omitted, defaults
+//' to the maximum evaluation time.
+//' @param value Observation value.
+//' @return Data.frame.
+//' @export 
+// [[Rcpp::export]]
+
+SEXP InfluenceR(
+    const arma::colvec idx,
+    const arma::colvec status,
+    const arma::colvec time,
+    const double trunc_time,
+    const arma::colvec value
+){
+  
+  // Unique times.
+  arma::colvec utimes = arma::unique(time);
+  arma::colvec unique_times = Truncate(utimes, trunc_time);
+  const int n_times = unique_times.size();
+  
+  // Construct a subject (row) by evaluation time (col) matrix.
+  arma::mat est = EstimatorCpp(
+    unique_times,
+    idx,
+    status,
+    time,
+    trunc_time,
+    value
+  );
+  
+  // Output.
+  return Rcpp::DataFrame::create(
+    Rcpp::Named("time")=est.col(0),
+    Rcpp::Named("y")=est.col(1),
+    Rcpp::Named("surv")=est.col(2),
+    Rcpp::Named("d")=est.col(3)
+  );
 }

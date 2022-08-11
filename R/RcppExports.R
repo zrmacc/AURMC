@@ -80,3 +80,19 @@ BootstrapSamplesR <- function(boot, eval_times, idx, status, time, value, replac
     .Call(`_AURMC_BootstrapSamplesR`, boot, eval_times, idx, status, time, value, replace_na, return_auc, trunc_time)
 }
 
+#' Influence Function R
+#' 
+#' Influence function contributions for the AUC.
+#'  
+#' @param idx Unique subject index. 
+#' @param status Status, coded as 0 for censoring, 1 for event. 
+#' @param time Observation time.
+#' @param trunc_time Truncation time? Optional. If omitted, defaults
+#' to the maximum evaluation time.
+#' @param value Observation value.
+#' @return Data.frame.
+#' @export 
+InfluenceR <- function(idx, status, time, trunc_time, value) {
+    .Call(`_AURMC_InfluenceR`, idx, status, time, trunc_time, value)
+}
+
