@@ -131,7 +131,6 @@ test_that("Calculation of martingales.", {
 
 test_that("Calculation of influence function.", {
   
-  # Case: I1.
   data <- data.frame(
     idx = c(1, 1, 2, 2, 3, 3, 4, 4),
     time = c(0, 1, 0, 2, 0, 3, 0, 4),
@@ -148,7 +147,7 @@ test_that("Calculation of influence function.", {
     value = data$value
   )
   
-  # Expected.
+  # Expected for I1.
   est <- EstimatorR(
     idx = data$idx,
     status = data$status,
@@ -187,7 +186,39 @@ test_that("Calculation of influence function.", {
     unique_times = est$time
   )
   
+  # Check I1.
   exp <- CalcI1(dm, mu, est$y)
   expect_equal(influence$i1, exp)
-
+  
+  # Expected for I2.
+  value_mat <- ValueMatrixR(
+    eval_times = est$time,
+    idx = data$idx,
+    time = data$time,
+    value = data$value
+  )
+  exp <- CalcI2(
+    d = est$d,
+    surv = est$surv,
+    unique_times = est$time,
+    value_mat = value_mat,
+    y = est$y
+  )
+  expect_equal(influence$i2, exp)
+  
+  # Expected for I3.
+  risk_mat <- AtRiskMatrixR(
+    eval_times = est$time,
+    idx = data$idx,
+    time = data$time
+  )
+  exp <- CalcI3(
+    d = est$d,
+    risk_mat = risk_mat,
+    surv = est$surv,
+    unique_times = est$time,
+    y = est$y
+  )
+  expect_equal(influence$i3, exp)
+  
 })

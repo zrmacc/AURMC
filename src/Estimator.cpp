@@ -1088,7 +1088,7 @@ arma::colvec CalcI2Cpp(
   // Calculate dt.
   const int n_time = unique_times.size();
   arma::colvec delta_t = arma::zeros(n_time);
-  delta_t.subvec(1, n_time - 1) = arma::diff(unique_times);
+  delta_t.subvec(0, n_time - 2) = arma::diff(unique_times);
   
   // Loop over subjects.
   for(int i=0; i<n; i++) {
@@ -1124,7 +1124,7 @@ arma::colvec CalcI3Cpp(
   // Calculate dt.
   const int n_time = unique_times.size();
   arma::colvec delta_t = arma::zeros(n_time);
-  delta_t.subvec(1, n_time - 1) = arma::diff(unique_times);
+  delta_t.subvec(0, n_time - 2) = arma::diff(unique_times);
   
   const arma::colvec y2 = arma::pow(y, 2);
   
