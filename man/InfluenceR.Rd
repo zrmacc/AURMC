@@ -22,5 +22,6 @@ to the maximum evaluation time.}
 Data.frame.
 }
 \description{
-Influence function contributions for the AUC.
+Influence function contributions for the AUC. Includes the three component
+integrals (\code{i1}, \code{i2}, \code{i3}) and the overall influence \code{psi}.
 }

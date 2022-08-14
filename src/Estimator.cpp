@@ -69,7 +69,7 @@ arma::colvec Truncate(const arma::colvec &time, const double tau) {
 
 //' Tabulate Value Matrix R
 //'
-//' Construct a subject (row) by evluation time (col) matrix.
+//' Construct a subject (row) by evaluation time (col) matrix.
 //'  
 //' @param eval_times Evaluation times.
 //' @param idx Unique subject index. 
@@ -91,9 +91,9 @@ SEXP ValueMatrixR(
   const int n = unique_idx.size();
   
   // Create a subject by evaluation times matrix, where
-  // Y[i, t] is subject i's current value at time t.
+  // D[i, t] is subject i's current value at time t.
   const int n_times = eval_times.size();
-  arma::mat y = arma::zeros(n, n_times);
+  arma::mat dmat = arma::zeros(n, n_times);
   
   // Loop over subjects.
   for(int i=0; i<n; i++) {
@@ -119,14 +119,14 @@ SEXP ValueMatrixR(
         current_value = next_value;
       }
 
-      y(i,j) = current_value;
+      dmat(i,j) = current_value;
 
       if (arma::all(subj_times <= utime)) {
         break;
       }
     }
   }
-  return Rcpp::wrap(y);
+  return Rcpp::wrap(dmat);
 }
 
 
@@ -155,9 +155,9 @@ arma::mat ValueMatrixCpp(
   const int n = unique_idx.size();
   
   // Create a subject by evaluation times matrix, where
-  // Y[i, t] is subject i's current value at time t.
+  // D[i, t] is subject i's current value at time t.
   const int n_times = eval_times.size();
-  arma::mat y = arma::zeros(n, n_times);
+  arma::mat dmat = arma::zeros(n, n_times);
   
   // Loop over subjects.
   for(int i=0; i<n; i++) {
@@ -183,9 +183,115 @@ arma::mat ValueMatrixCpp(
         current_value = next_value;
       }
 
-      y(i,j) = current_value;
+      dmat(i,j) = current_value;
 
       if (arma::all(subj_times <= utime)) {
+        break;
+      }
+    }
+  }
+  return dmat;
+}
+
+
+// ----------------------------------------------------------------------------
+// At risk matrix.
+// ----------------------------------------------------------------------------
+
+
+//' Tabulate At-Risk Matrix R
+//'
+//' Construct a subject (row) by evaluation time (col) matrix.
+//'  
+//' @param eval_times Evaluation times.
+//' @param idx Unique subject index. 
+//' @param time Observation time.
+//' @return Numeric matrix.
+//' @export
+// [[Rcpp::export]]
+
+SEXP AtRiskMatrixR(
+    const arma::colvec eval_times,
+    const arma::colvec idx,
+    const arma::colvec time
+){
+  
+  // Subjects.
+  const arma::colvec unique_idx = arma::unique(idx);
+  const int n = unique_idx.size();
+  
+  // Create a subject by evaluation times matrix, where
+  // Y[i, t] is 1 if subject i is at-risk at time t.
+  const int n_times = eval_times.size();
+  arma::mat y = arma::zeros(n, n_times);
+  
+  // Loop over subjects.
+  for(int i=0; i<n; i++) {
+    
+    // Time, status, and values for the focus subject.
+    arma::colvec subj_times = time.elem(arma::find(idx == unique_idx(i)));
+    
+    // Subject is at risk until time > the subject's last time.
+    double subj_last_time = subj_times.max();
+
+    // Loop over times.
+    for(int j=0; j<n_times; j++) {
+      
+      double current_time = eval_times(j);
+      if(current_time <= subj_last_time) {
+        y(i, j) = 1;
+      } else {
+        break;
+      }
+    }
+  }
+  return Rcpp::wrap(y);
+}
+
+
+// ----------------------------------------------------------------------------
+
+
+// Tabulate At-Risk Matrix Cpp
+//
+// Construct a subject (row) by evaluation time (col) matrix.
+//  
+// @param eval_times Evaluation times.
+// @param idx Unique subject index. 
+// @param time Observation time.
+// @return Numeric matrix.
+
+arma::mat AtRiskMatrixCpp(
+    const arma::colvec eval_times,
+    const arma::colvec idx,
+    const arma::colvec time
+){
+  
+  // Subjects.
+  const arma::colvec unique_idx = arma::unique(idx);
+  const int n = unique_idx.size();
+  
+  // Create a subject by evaluation times matrix, where
+  // Y[i, t] is 1 if subject i is at-risk at time t.
+  const int n_times = eval_times.size();
+  arma::mat y = arma::zeros(n, n_times);
+  
+  // Loop over subjects.
+  for(int i=0; i<n; i++) {
+    
+    // Time, status, and values for the focus subject.
+    arma::colvec subj_times = time.elem(arma::find(idx == unique_idx(i)));
+    
+    // Subject is at risk until time > the subject's last time.
+    double subj_last_time = subj_times.max();
+    
+    // Loop over times.
+    for(int j=0; j<n_times; j++) {
+      
+      double current_time = eval_times(j);
+      if(current_time <= subj_last_time) {
+        y(i, j) = 1;
+      } else {
         break;
       }
     }
@@ -495,7 +601,6 @@ arma::mat EstimatorCpp(
 
   // Construct a subject (row) by evaluation time (col) matrix.
   arma::mat value_mat = ValueMatrixCpp(eval_times, idx, time, value);
-  
   // Rcpp::Rcout << value_mat << std::endl; 
 
   // Column sums.
@@ -728,21 +833,26 @@ SEXP BootstrapSamplesR(
 //' 
 //' @param d Value of d(t) at each time point.
 //' @param surv Value of S(t) at each time point.
-//' @param time Values of time t.
+//' @param unique_times Unique values of time t.
 //' @param y Value of y(t) at each time point.
 //' @return Numeric vector of \eqn{\mu(t; tau)}.
 // [[Rcpp::export]]
 SEXP CalcMuR(
   const arma::colvec d,
   const arma::colvec surv,
-  const arma::colvec time,
+  const arma::colvec unique_times,
   const arma::colvec y
 ) {
-  const int n_time = time.size();
+  
+  // Calculate dt.
+  const int n_time = unique_times.size();
   arma::colvec delta_t = arma::zeros(n_time);
-  arma::colvec diff = arma::diff(time);
-  delta_t.subvec(1, n_time - 1) = arma::diff(time);
+  delta_t.subvec(1, n_time - 1) = arma::diff(unique_times);
+
+  // Calculate S(t)d(t) / y(t).
   arma::colvec integrand = surv % (d / y);
+  
+  // Integrate.
   arma::colvec out = arma::reverse(
     arma::cumsum(arma::reverse(delta_t % integrand))
   );
@@ -756,20 +866,25 @@ SEXP CalcMuR(
 // 
 // @param d Value of d(t) at each time point.
 // @param surv Value of S(t) at each time point.
-// @param time Values of time t.
+// @param unique_times Unique values of time t.
 // @param y Value of y(t) at each time point.
 // @return Numeric vector of \eqn{\mu(t; tau)}.
 arma::colvec CalcMuCpp(
   const arma::colvec d,
   const arma::colvec surv,
-  const arma::colvec time,
+  const arma::colvec unique_times,
   const arma::colvec y
 ) {
-  const int n_time = time.size();
+  
+  // Calculate dt.
+  const int n_time = unique_times.size();
   arma::colvec delta_t = arma::zeros(n_time);
-  arma::colvec diff = arma::diff(time);
-  delta_t.subvec(1, n_time - 1) = arma::diff(time);
+  delta_t.subvec(1, n_time - 1) = arma::diff(unique_times);
+  
+  // Calculate S(t)d(t) / y(t).
   arma::colvec integrand = surv % (d / y);
+  
+  // Integrate.
   arma::colvec out = arma::reverse(
     arma::cumsum(arma::reverse(delta_t % integrand))
   );
@@ -817,7 +932,7 @@ SEXP CalcMartingaleR(
     arma::colvec subj_times = time.elem(arma::find(idx == unique_idx(i)));
     arma::colvec subj_status = status.elem(arma::find(idx == unique_idx(i)));
     
-    // Subject is at risk until time > the subject's las time.
+    // Subject is at risk until time > the subject's last time.
     double subj_last_time = subj_times.max();
     
     // Subject's final status.
@@ -843,6 +958,8 @@ SEXP CalcMartingaleR(
       // Add -Y_{i}(t)d\Lambda(t).
       if(current_time <= subj_last_time) {
         dm(i, j) -= current_haz;
+      } else {
+        break;
       }
     }
   }
@@ -930,10 +1047,9 @@ arma::mat CalcMartingaleCpp(
 // Calculate \eqn{I_{1,i} = \int_{0}^{\tau} -\mu(t; \tau) dM_{i}(t) / y(t)}.
 // 
 // @param dm Matrix of dM_{i}(t).
-// @param mu Vector of \mu(t; tau).
+// @param mu Vector of mu(t; tau).
 // @param y Vector of y(t).
 // @return Vector with I1 for each subject.
-// [[Rcpp::export]]
 arma::colvec CalcI1Cpp(
     const arma::mat dm,
     const arma::colvec mu,
@@ -949,12 +1065,87 @@ arma::colvec CalcI1Cpp(
 }
 
 
+// Calculate I2
+//
+// Calculate \eqn{I_{2,i} = S(t)\{D_{i}(t) - d(t)\}/y(t)}.
+// 
+// @param d Vector of d(t).
+// @param surv Vector of S(t).
+// @param unique_times Vector of unique times t.
+// @param value_mat Matrix of D_{i}(t).
+// @param y Vector of y(t).
+// @return Vector with I2 for each subject.
+arma::colvec CalcI2Cpp(
+    const arma::mat d,
+    const arma::colvec surv,
+    const arma::colvec unique_times,
+    const arma::mat value_mat,
+    const arma::colvec y
+) {
+  int n = value_mat.n_rows;
+  arma::colvec out = arma::zeros(n);
+  
+  // Calculate dt.
+  const int n_time = unique_times.size();
+  arma::colvec delta_t = arma::zeros(n_time);
+  delta_t.subvec(1, n_time - 1) = arma::diff(unique_times);
+  
+  // Loop over subjects.
+  for(int i=0; i<n; i++) {
+    arma::colvec di = arma::trans(value_mat.row(i));
+    
+    // Integrate.
+    out(i) = arma::sum(surv % (di - d) % delta_t / y);
+  }
+  return out;
+}
+
+
+// Calculate I3
+//
+// Calculate \eqn{I_{3,i} = -S(t)d(t)\{Y_{i}(t) - y(t)\} / y^2(t)}.
+// 
+// @param d Vector of d(t).
+// @param risk_mat Matrix of Y_{i}(t).
+// @param surv Vector of S(t).
+// @param unique_times Vector of unique times t.
+// @param y Vector of y(t).
+// @return Vector with I3 for each subject.
+arma::colvec CalcI3Cpp(
+    const arma::mat d,
+    const arma::mat risk_mat,
+    const arma::colvec surv,
+    const arma::colvec unique_times,
+    const arma::colvec y
+) {
+  int n = risk_mat.n_rows;
+  arma::colvec out = arma::zeros(n);
+  
+  // Calculate dt.
+  const int n_time = unique_times.size();
+  arma::colvec delta_t = arma::zeros(n_time);
+  delta_t.subvec(1, n_time - 1) = arma::diff(unique_times);
+  
+  const arma::colvec y2 = arma::pow(y, 2);
+  
+  // Loop over subjects.
+  for(int i=0; i<n; i++) {
+    arma::colvec yi = arma::trans(risk_mat.row(i));
+    
+    // Integrate.
+    out(i) = -1 * arma::sum(surv % d % (yi - y) % delta_t / y2);
+  }
+  return out;
+}
+
+
 // ----------------------------------------------------------------------------
 
 
 //' Influence Function R
 //' 
-//' Influence function contributions for the AUC.
+//' Influence function contributions for the AUC. Includes the three component
+//' integrals (`i1`, `i2`, `i3`) and the overall influence `psi`.
 //'  
 //' @param idx Unique subject index. 
 //' @param status Status, coded as 0 for censoring, 1 for event. 
@@ -975,7 +1166,7 @@ SEXP InfluenceR(
 ){
   
   // Subjects.
-  // const arma::colvec unique_idx = arma::unique(idx);
+  const arma::colvec unique_idx = arma::unique(idx);
   // const int n = unique_idx.size();
   
   // Unique times.
@@ -983,44 +1174,51 @@ SEXP InfluenceR(
   unique_times = Truncate(unique_times, trunc_time);
   // const int n_times = unique_times.size();
   
-  // Columns {0: time, 1: y, 2: haz, 3: surv, 4: d, 5: exp}.
+  // Return columns: {0: time, 1: y, 2: haz, 3: surv, 4: d, 5: exp}.
   arma::mat est = EstimatorCpp(
-    unique_times,
-    idx,
-    status,
-    time,
-    trunc_time,
-    value
-  );
+    unique_times, idx, status, time, trunc_time, value);
   // Rcpp::Rcout << est << std::endl; 
   
-  // Proportion at risk.
   const arma::colvec y = est.col(1);
   const arma::colvec haz = est.col(2);
   const arma::colvec surv = est.col(3);
   const arma::colvec d = est.col(4);
   
   // Calculate mu.
-  arma::colvec mu = CalcMuCpp(d, surv, unique_times, y);
+  const arma::colvec mu = CalcMuCpp(d, surv, unique_times, y);
   // Rcpp::Rcout << mu << std::endl; 
   
   // Calculate martingales.
-  arma::mat dm = CalcMartingaleCpp(haz, idx, status, time, unique_times);
+  const arma::mat dm = CalcMartingaleCpp(haz, idx, status, time, unique_times);
   // Rcpp::Rcout << dm << std::endl; 
   
   // Calculate I1.
-  arma::colvec i1 = CalcI1Cpp(dm, mu, y);
+  const arma::colvec i1 = CalcI1Cpp(dm, mu, y);
   // Rcpp::Rcout << i1 << std::endl; 
   
+  // Calculate value matrix.
+  const arma::mat value_mat = ValueMatrixCpp(unique_times, idx, time, value);
   
+  // Calculate I2.
+  const arma::colvec i2 = CalcI2Cpp(d, surv, unique_times, value_mat, y);
+  // Rcpp::Rcout << i2 << std::endl; 
+  
+  // Calculate at risk matrix.
+  const arma::mat risk_mat = AtRiskMatrixCpp(unique_times, idx, time);
+  
+  // Calculate I3.
+  const arma::colvec i3 = CalcI3Cpp(d, risk_mat, surv, unique_times, y);
+  // Rcpp::Rcout << i3 << std::endl; 
+  
+  // Overall influence funciton.
+  const arma::colvec psi = i1 + i2 + i3;
   
   // Output.
-  // return Rcpp::DataFrame::create(
-  //   Rcpp::Named("time")=est.col(0),
-  //   Rcpp::Named("y")=est.col(1),
-  //   Rcpp::Named("surv")=est.col(2),
-  //   Rcpp::Named("d")=est.col(3),
-  //   Rcpp::Named("exp")=est.col(4)
-  // );
-  return Rcpp::wrap(i1);
+  return Rcpp::DataFrame::create(
+    Rcpp::Named("idx")=unique_idx,
+    Rcpp::Named("i1")=i1,
+    Rcpp::Named("i2")=i2,
+    Rcpp::Named("i3")=i3,
+    Rcpp::Named("psi")=psi
+  );
 }

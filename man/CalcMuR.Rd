@@ -4,14 +4,14 @@
 \alias{CalcMuR}
 \title{Calculate Mu R}
 \usage{
-CalcMuR(d, surv, time, y)
+CalcMuR(d, surv, unique_times, y)
 }
 \arguments{
 \item{d}{Value of d(t) at each time point.}
 
 \item{surv}{Value of S(t) at each time point.}
 
-\item{time}{Values of time t.}
+\item{unique_times}{Unique values of time t.}
 
 \item{y}{Value of y(t) at each time point.}
 }

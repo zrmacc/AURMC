@@ -3,7 +3,7 @@
 
 #' Tabulate Value Matrix R
 #'
-#' Construct a subject (row) by evluation time (col) matrix.
+#' Construct a subject (row) by evaluation time (col) matrix.
 #'  
 #' @param eval_times Evaluation times.
 #' @param idx Unique subject index. 
@@ -13,6 +13,19 @@
 #' @export
 ValueMatrixR <- function(eval_times, idx, time, value) {
     .Call(`_AURMC_ValueMatrixR`, eval_times, idx, time, value)
+}
+
+#' Tabulate At-Risk Matrix R
+#'
+#' Construct a subject (row) by evaluation time (col) matrix.
+#'  
+#' @param eval_times Evaluation times.
+#' @param idx Unique subject index. 
+#' @param time Observation time.
+#' @return Numeric matrix.
+#' @export
+AtRiskMatrixR <- function(eval_times, idx, time) {
+    .Call(`_AURMC_AtRiskMatrixR`, eval_times, idx, time)
 }
 
 #' Tabulate Kaplan Meier R
@@ -86,11 +99,11 @@ BootstrapSamplesR <- function(boot, eval_times, idx, status, time, value, replac
 #' 
 #' @param d Value of d(t) at each time point.
 #' @param surv Value of S(t) at each time point.
-#' @param time Values of time t.
+#' @param unique_times Unique values of time t.
 #' @param y Value of y(t) at each time point.
 #' @return Numeric vector of \eqn{\mu(t; tau)}.
-CalcMuR <- function(d, surv, time, y) {
-    .Call(`_AURMC_CalcMuR`, d, surv, time, y)
+CalcMuR <- function(d, surv, unique_times, y) {
+    .Call(`_AURMC_CalcMuR`, d, surv, unique_times, y)
 }
 
 #' Calculate Martingale
@@ -111,13 +124,10 @@ CalcMartingaleCpp <- function(haz, idx, status, time, unique_times) {
     .Call(`_AURMC_CalcMartingaleCpp`, haz, idx, status, time, unique_times)
 }
 
-CalcI1Cpp <- function(dm, mu, y) {
-    .Call(`_AURMC_CalcI1Cpp`, dm, mu, y)
-}
-
 #' Influence Function R
 #' 
-#' Influence function contributions for the AUC.
+#' Influence function contributions for the AUC. Includes the three component
+#' integrals (`i1`, `i2`, `i3`) and the overall influence `psi`.
 #'  
 #' @param idx Unique subject index. 
 #' @param status Status, coded as 0 for censoring, 1 for event. 

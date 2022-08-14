@@ -23,7 +23,7 @@ test_that("Calculation of mu.", {
   obs <- CalcMuR(
     d = est$d,
     surv = est$surv,
-    time = est$time,
+    unique_times = est$time,
     y = est$y
   )
   obs <- c(obs)
@@ -32,7 +32,7 @@ test_that("Calculation of mu.", {
   exp <- CalcMu(
     d = est$d,
     surv = est$surv,
-    time = est$time,
+    unique_time = est$time,
     y = est$y
   )
   expect_equal(obs, exp)
@@ -123,4 +123,71 @@ test_that("Calculation of martingales.", {
   exp[3, 3] <- 0.0 - 0.5
   expect_equal(obs, exp)  
   
+})
+
+
+# -----------------------------------------------------------------------------
+
+
+test_that("Calculation of influence function.", {
+  
+  # Case: I1.
+  data <- data.frame(
+    idx = c(1, 1, 2, 2, 3, 3, 4, 4),
+    time = c(0, 1, 0, 2, 0, 3, 0, 4),
+    status = c(1, 2, 1, 2, 1, 2, 1, 2),
+    value = c(1, 1, 1, 1, 1, 1, 1, 1)
+  )
+  
+  # Observed.
+  influence <- InfluenceR(
+    idx = data$idx,
+    status = data$status,
+    time = data$time,
+    trunc_time = 3,
+    value = data$value
+  )
+  
+  # Expected.
+  est <- EstimatorR(
+    idx = data$idx,
+    status = data$status,
+    time = data$time, 
+    value = data$value,
+    trunc_time = 3
+  )
+
+  n <- 4
+  est$y <- est$nar / n
+  est$d <- est$sum_value / n
+  
+  # Calculate mu.
+  mu <- CalcMuR(
+    d = est$d,
+    surv = est$surv, 
+    unique_times = est$time,
+    y = est$y
+  )
+  mu <- as.numeric(mu)
+  
+  # Calculate Kaplan-Meier.
+  km <- KaplanMeierR(
+    eval_times = est$time,
+    idx = data$idx,
+    status = data$status,
+    time = data$time
+  )
+  
+  # Calculate martingales.
+  dm <- CalcMartingaleR(
+    haz = km$haz,
+    idx = data$idx,
+    status = data$status,
+    time = data$time,
+    unique_times = est$time
+  )
+  
+  exp <- CalcI1(dm, mu, est$y)
+  expect_equal(influence$i1, exp)
+
 })
