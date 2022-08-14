@@ -90,6 +90,63 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// CalcMuR
+SEXP CalcMuR(const arma::colvec d, const arma::colvec surv, const arma::colvec time, const arma::colvec y);
+RcppExport SEXP _AURMC_CalcMuR(SEXP dSEXP, SEXP survSEXP, SEXP timeSEXP, SEXP ySEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const arma::colvec >::type d(dSEXP);
+    Rcpp::traits::input_parameter< const arma::colvec >::type surv(survSEXP);
+    Rcpp::traits::input_parameter< const arma::colvec >::type time(timeSEXP);
+    Rcpp::traits::input_parameter< const arma::colvec >::type y(ySEXP);
+    rcpp_result_gen = Rcpp::wrap(CalcMuR(d, surv, time, y));
+    return rcpp_result_gen;
+END_RCPP
+}
+// CalcMartingaleR
+SEXP CalcMartingaleR(const arma::colvec haz, const arma::colvec idx, const arma::colvec status, const arma::colvec time, const arma::colvec unique_times);
+RcppExport SEXP _AURMC_CalcMartingaleR(SEXP hazSEXP, SEXP idxSEXP, SEXP statusSEXP, SEXP timeSEXP, SEXP unique_timesSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const arma::colvec >::type haz(hazSEXP);
+    Rcpp::traits::input_parameter< const arma::colvec >::type idx(idxSEXP);
+    Rcpp::traits::input_parameter< const arma::colvec >::type status(statusSEXP);
+    Rcpp::traits::input_parameter< const arma::colvec >::type time(timeSEXP);
+    Rcpp::traits::input_parameter< const arma::colvec >::type unique_times(unique_timesSEXP);
+    rcpp_result_gen = Rcpp::wrap(CalcMartingaleR(haz, idx, status, time, unique_times));
+    return rcpp_result_gen;
+END_RCPP
+}
+// CalcMartingaleCpp
+arma::mat CalcMartingaleCpp(const arma::colvec haz, const arma::colvec idx, const arma::colvec status, const arma::colvec time, const arma::colvec unique_times);
+RcppExport SEXP _AURMC_CalcMartingaleCpp(SEXP hazSEXP, SEXP idxSEXP, SEXP statusSEXP, SEXP timeSEXP, SEXP unique_timesSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const arma::colvec >::type haz(hazSEXP);
+    Rcpp::traits::input_parameter< const arma::colvec >::type idx(idxSEXP);
+    Rcpp::traits::input_parameter< const arma::colvec >::type status(statusSEXP);
+    Rcpp::traits::input_parameter< const arma::colvec >::type time(timeSEXP);
+    Rcpp::traits::input_parameter< const arma::colvec >::type unique_times(unique_timesSEXP);
+    rcpp_result_gen = Rcpp::wrap(CalcMartingaleCpp(haz, idx, status, time, unique_times));
+    return rcpp_result_gen;
+END_RCPP
+}
+// CalcI1Cpp
+arma::colvec CalcI1Cpp(const arma::mat dm, const arma::colvec mu, const arma::colvec y);
+RcppExport SEXP _AURMC_CalcI1Cpp(SEXP dmSEXP, SEXP muSEXP, SEXP ySEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const arma::mat >::type dm(dmSEXP);
+    Rcpp::traits::input_parameter< const arma::colvec >::type mu(muSEXP);
+    Rcpp::traits::input_parameter< const arma::colvec >::type y(ySEXP);
+    rcpp_result_gen = Rcpp::wrap(CalcI1Cpp(dm, mu, y));
+    return rcpp_result_gen;
+END_RCPP
+}
 // InfluenceR
 SEXP InfluenceR(const arma::colvec idx, const arma::colvec status, const arma::colvec time, const double trunc_time, const arma::colvec value);
 RcppExport SEXP _AURMC_InfluenceR(SEXP idxSEXP, SEXP statusSEXP, SEXP timeSEXP, SEXP trunc_timeSEXP, SEXP valueSEXP) {
@@ -112,6 +169,10 @@ static const R_CallMethodDef CallEntries[] = {
     {"_AURMC_EstimatorR", (DL_FUNC) &_AURMC_EstimatorR, 8},
     {"_AURMC_DrawBootstrapR", (DL_FUNC) &_AURMC_DrawBootstrapR, 4},
     {"_AURMC_BootstrapSamplesR", (DL_FUNC) &_AURMC_BootstrapSamplesR, 9},
+    {"_AURMC_CalcMuR", (DL_FUNC) &_AURMC_CalcMuR, 4},
+    {"_AURMC_CalcMartingaleR", (DL_FUNC) &_AURMC_CalcMartingaleR, 5},
+    {"_AURMC_CalcMartingaleCpp", (DL_FUNC) &_AURMC_CalcMartingaleCpp, 5},
+    {"_AURMC_CalcI1Cpp", (DL_FUNC) &_AURMC_CalcI1Cpp, 3},
     {"_AURMC_InfluenceR", (DL_FUNC) &_AURMC_InfluenceR, 5},
     {NULL, NULL, 0}
 };

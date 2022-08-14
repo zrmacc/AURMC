@@ -80,6 +80,41 @@ BootstrapSamplesR <- function(boot, eval_times, idx, status, time, value, replac
     .Call(`_AURMC_BootstrapSamplesR`, boot, eval_times, idx, status, time, value, replace_na, return_auc, trunc_time)
 }
 
+#' Calculate Mu R
+#'
+#' Evaluate \eqn{\mu(t; \tau) = \int_{t}^{\tau}{S(u)d(u)/y(u)}du}.
+#' 
+#' @param d Value of d(t) at each time point.
+#' @param surv Value of S(t) at each time point.
+#' @param time Values of time t.
+#' @param y Value of y(t) at each time point.
+#' @return Numeric vector of \eqn{\mu(t; tau)}.
+CalcMuR <- function(d, surv, time, y) {
+    .Call(`_AURMC_CalcMuR`, d, surv, time, y)
+}
+
+#' Calculate Martingale
+#'
+#' Calculate \eqn{dM_{i}(t) = dN_{i}(t) - Y_{i}(t)d\Lambda(t)}.
+#' 
+#' @param haz Value of the hazard at each unique time.
+#' @param idx Subject index.
+#' @param status Subject status.
+#' @param time Subject observation times.
+#' @param unique_times Unique times at which to obtain the martingale.
+#' @return Matrix with subjects as rows and unique times as columns.
+CalcMartingaleR <- function(haz, idx, status, time, unique_times) {
+    .Call(`_AURMC_CalcMartingaleR`, haz, idx, status, time, unique_times)
+}
+
+CalcMartingaleCpp <- function(haz, idx, status, time, unique_times) {
+    .Call(`_AURMC_CalcMartingaleCpp`, haz, idx, status, time, unique_times)
+}
+
+CalcI1Cpp <- function(dm, mu, y) {
+    .Call(`_AURMC_CalcI1Cpp`, dm, mu, y)
+}
+
 #' Influence Function R
 #' 
 #' Influence function contributions for the AUC.
