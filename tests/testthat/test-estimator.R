@@ -18,7 +18,7 @@ test_that("Test estimator.", {
   
   # Expected.
   n_times <- length(unique(df$time))
-  expect_equal(obs$exp_value, rep(1, n_times))
+  expect_equal(obs$exp, rep(1, n_times))
   
   # Observed.
   obs <- EstimatorR(

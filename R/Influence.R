@@ -1,4 +1,4 @@
-# Purpose: Check calculation of influence funciton components.
+# Purpose: Check calculation of influence function components.
 # Updated: 2022-08-14
 
 

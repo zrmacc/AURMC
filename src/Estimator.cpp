@@ -69,14 +69,13 @@ arma::colvec Truncate(const arma::colvec &time, const double tau) {
 
 //' Tabulate Value Matrix R
 //'
-//' Construct a subject (row) by evaluation time (col) matrix.
+//' Tabulate \eqn{D_{i}(t)} with subjects as rows and evaluation times as columns.
 //'  
 //' @param eval_times Evaluation times.
 //' @param idx Unique subject index. 
 //' @param time Observation time.
 //' @param value Observation value.
 //' @return Numeric matrix.
-//' @export
 // [[Rcpp::export]]
 
 SEXP ValueMatrixR(
@@ -91,27 +90,29 @@ SEXP ValueMatrixR(
   const int n = unique_idx.size();
   
   // Create a subject by evaluation times matrix, where
-  // D[i, t] is subject i's current value at time t.
+  // D(i, t) is subject i's current value at time t.
   const int n_times = eval_times.size();
   arma::mat dmat = arma::zeros(n, n_times);
   
   // Loop over subjects.
   for(int i=0; i<n; i++) {
     
-    // Time, status, and values for the focus subject.
+    // Current subject.
     arma::colvec subj_times = time.elem(arma::find(idx == unique_idx(i)));
     arma::colvec subj_values = value.elem(arma::find(idx == unique_idx(i)));
     
-    // Loop over unique times.
+    // Initialize.
     double current_value = 0;
     double next_value = 0;
+
+    // Loop over evaluation times.
     for(int j=0; j<n_times; j++) {
 
-      double utime = eval_times(j);
+      double current_time = eval_times(j);
 
-      if (arma::any(subj_times <= utime)) {
+      if (arma::any(subj_times <= current_time)) {
         next_value = arma::as_scalar(
-          subj_values.elem(arma::find(subj_times <= utime, 1, "last"))
+          subj_values.elem(arma::find(subj_times <= current_time, 1, "last"))
         );
       }
 
@@ -121,7 +122,7 @@ SEXP ValueMatrixR(
 
       dmat(i,j) = current_value;
 
-      if (arma::all(subj_times <= utime)) {
+      if (arma::all(subj_times <= current_time)) {
         break;
       }
     }
@@ -135,7 +136,7 @@ SEXP ValueMatrixR(
 
 // Tabulate Value Matrix Cpp
 //
-// Construct a subject (row) by evaluation time (col) matrix.
+// Tabulate \eqn{D_{i}(t)} with subjects as rows and evaluation times as columns.
 //  
 // @param eval_times Evaluation times.
 // @param idx Unique subject index. 
@@ -155,27 +156,29 @@ arma::mat ValueMatrixCpp(
   const int n = unique_idx.size();
   
   // Create a subject by evaluation times matrix, where
-  // D[i, t] is subject i's current value at time t.
+  // D(i, t) is subject i's current value at time t.
   const int n_times = eval_times.size();
   arma::mat dmat = arma::zeros(n, n_times);
   
   // Loop over subjects.
   for(int i=0; i<n; i++) {
     
-    // Time, status, and values for the focus subject.
+    // Current subject.
     arma::colvec subj_times = time.elem(arma::find(idx == unique_idx(i)));
     arma::colvec subj_values = value.elem(arma::find(idx == unique_idx(i)));
     
-    // Loop over unique times.
+    // Initialize.
     double current_value = 0;
     double next_value = 0;
+
+    // Loop over evaluation times.
     for(int j=0; j<n_times; j++) {
 
-      double utime = eval_times(j);
+      double current_time = eval_times(j);
 
-      if (arma::any(subj_times <= utime)) {
+      if (arma::any(subj_times <= current_time)) {
         next_value = arma::as_scalar(
-          subj_values.elem(arma::find(subj_times <= utime, 1, "last"))
+          subj_values.elem(arma::find(subj_times <= current_time, 1, "last"))
         );
       }
 
@@ -185,7 +188,7 @@ arma::mat ValueMatrixCpp(
 
       dmat(i,j) = current_value;
 
-      if (arma::all(subj_times <= utime)) {
+      if (arma::all(subj_times <= current_time)) {
         break;
       }
     }
@@ -207,7 +210,6 @@ arma::mat ValueMatrixCpp(
 //' @param idx Unique subject index. 
 //' @param time Observation time.
 //' @return Numeric matrix.
-//' @export
 // [[Rcpp::export]]
 
 SEXP AtRiskMatrixR(
@@ -221,14 +223,14 @@ SEXP AtRiskMatrixR(
   const int n = unique_idx.size();
   
   // Create a subject by evaluation times matrix, where
-  // Y[i, t] is 1 if subject i is at-risk at time t.
+  // Y(i, t) is 1 if subject i is at-risk at time t.
   const int n_times = eval_times.size();
   arma::mat y = arma::zeros(n, n_times);
   
   // Loop over subjects.
   for(int i=0; i<n; i++) {
     
-    // Time, status, and values for the focus subject.
+    // Current subject.
     arma::colvec subj_times = time.elem(arma::find(idx == unique_idx(i)));
     
     // Subject is at risk until time > the subject's last time.
@@ -238,6 +240,7 @@ SEXP AtRiskMatrixR(
     for(int j=0; j<n_times; j++) {
       
       double current_time = eval_times(j);
+
       if(current_time <= subj_last_time) {
         y(i, j) = 1;
       } else {
@@ -279,7 +282,7 @@ arma::mat AtRiskMatrixCpp(
   // Loop over subjects.
   for(int i=0; i<n; i++) {
     
-    // Time, status, and values for the focus subject.
+    // Current subject.
     arma::colvec subj_times = time.elem(arma::find(idx == unique_idx(i)));
     
     // Subject is at risk until time > the subject's last time.
@@ -289,6 +292,7 @@ arma::mat AtRiskMatrixCpp(
     for(int j=0; j<n_times; j++) {
       
       double current_time = eval_times(j);
+
       if(current_time <= subj_last_time) {
         y(i, j) = 1;
       } else {
@@ -307,8 +311,13 @@ arma::mat AtRiskMatrixCpp(
 
 //' Tabulate Kaplan Meier R
 //'
-//' Constructs a matrix with evaluation times as rows, and 3 columns, for 
-//' time, number at risk, and Kaplan-Meier survival probability.
+//' Constructs a matrix with evaluation times as rows, and 4 columns:
+//' \itemize{
+//' \item{time}{Evaluation times.}
+//' \item{nar}{Number at risk.}
+//' \item{surv}{Survival probability.}
+//' \item{haz}{Hazard.}
+//' }
 //'  
 //' @param eval_times Evaluation times.
 //' @param idx Unique subject index.
@@ -342,10 +351,8 @@ SEXP KaplanMeierR(
 
   for(int i=0; i<n_unique_time; i++) {
     
-    double utime = unique_times(i);
-    
-    // Equivalent to status[time == t].
-    const arma::colvec current_status = status.elem(arma::find(time == utime));
+    double current_time = unique_times(i);
+    const arma::colvec current_status = status.elem(arma::find(time == current_time));
     
     nar(i) = current_nar;
     censor(i) = arma::sum(current_status == 0.0);
@@ -355,7 +362,7 @@ SEXP KaplanMeierR(
     current_nar -= censor(i) + death(i);
   }
   
-  // Hazard (of death).
+  // Hazard.
   const arma::colvec haz = death / nar;
   
   // Survival probability.
@@ -370,8 +377,8 @@ SEXP KaplanMeierR(
   int pointer = 0;
   for(int i=0; i<n_unique_time; i++) {
     
-    double utime = unique_times(i);
-    if(IsIn(utime, eval_times)) {
+    double current_time = unique_times(i);
+    if(IsIn(current_time, eval_times)) {
       nar_out(pointer) = nar(i);
       haz_out(pointer) = haz(i);
       surv_out(pointer) = surv(i);
@@ -395,8 +402,13 @@ SEXP KaplanMeierR(
 
 // Tabulate Kaplan Meier Cpp
 //  
-// Construct an evaluation time (row) by 2 matrix, where the columns are
-// the number at risk and the Kaplan-Meier survival probability.
+// Constructs a matrix with evaluation times as rows, and 4 columns:
+// \itemize{
+// \item{time}{Evaluation times.}
+// \item{nar}{Number at risk.}
+// \item{surv}{Survival probability.}
+// \item{haz}{Hazard.}
+// }
 //
 // @param eval_times Evaluation times.
 // @param idx Unique subject index.
@@ -429,10 +441,8 @@ arma::mat KaplanMeierCpp(
 
   for(int i=0; i<n_unique_time; i++) {
     
-    double utime = unique_times(i);
-    
-    // Equivalent to status[time == t].
-    const arma::colvec current_status = status.elem(arma::find(time == utime));
+    double current_time = unique_times(i);
+    const arma::colvec current_status = status.elem(arma::find(time == current_time));
     
     nar(i) = current_nar;
     censor(i) = arma::sum(current_status == 0.0);
@@ -442,7 +452,7 @@ arma::mat KaplanMeierCpp(
     current_nar -= censor(i) + death(i);
   }
   
-  // Hazard (of death).
+  // Hazard.
   const arma::colvec haz = death / nar;
   
   // Survival probability.
@@ -457,8 +467,8 @@ arma::mat KaplanMeierCpp(
   int pointer = 0;
   for(int i=0; i<n_unique_time; i++) {
     
-    double utime = unique_times(i);
-    if(IsIn(utime, eval_times)) {
+    double current_time = unique_times(i);
+    if(IsIn(current_time, eval_times)) {
       nar_out(pointer) = nar(i);
       haz_out(pointer) = haz(i);
       surv_out(pointer) = surv(i);
@@ -468,7 +478,7 @@ arma::mat KaplanMeierCpp(
   }
   
   // Output.
-  arma::mat out = arma::join_rows(nar_out, surv_out, haz_out);
+  arma::mat out = arma::join_rows(eval_times, nar_out, surv_out, haz_out);
   return out;
 }
 
@@ -490,7 +500,6 @@ arma::mat KaplanMeierCpp(
 //' @param trunc_time Truncation time? Optional. If omitted, defaults
 //' to the maximum evaluation time.
 //' @return Data.frame.
-//' @export 
 // [[Rcpp::export]]
 
 SEXP EstimatorR(
@@ -504,6 +513,10 @@ SEXP EstimatorR(
   const Rcpp::Nullable<double> trunc_time=R_NilValue
 ){
 
+  // Subjects.
+  const arma::colvec unique_idx = arma::unique(idx);
+  const int n = unique_idx.size();
+
   // Unique times.
   // Armadillo's unique function sorts the values in ascending order.
   arma::colvec unique_times;
@@ -514,30 +527,34 @@ SEXP EstimatorR(
     unique_times = arma::unique(time);
   }
 
+  // Truncate.
   if(trunc_time.isNotNull()) {
     double tau = Rcpp::as<double>(trunc_time);
     unique_times = Truncate(unique_times, tau);
   } 
   const int n_times = unique_times.size();
 
-  // Construct a subject (row) by evaluation time (col) matrix.
+  // Tabulate D_{i}(t).
   arma::mat value_mat = ValueMatrixCpp(unique_times, idx, time, value);
 
-  // Column sums.
-  arma::colvec value_sums = arma::trans(arma::sum(value_mat, 0));
+  // Estimate d(t).
+  arma::colvec d = arma::trans(arma::sum(value_mat, 0)) / n;
   
-  // Construct Kaplan-Meier curve: evalulation time (row) by 2.
+  // Kaplan-Meier.
   arma::mat km_mat = KaplanMeierCpp(unique_times, idx, status, time);
   if(replace_na) {
   	km_mat.replace(arma::datum::nan, 0);
   }
 
-  arma::colvec nar = km_mat.col(0);
-  arma::colvec surv = km_mat.col(1);
-  arma::colvec haz = km_mat.col(2);
+  const arma::colvec nar = km_mat.col(1);
+  const arma::colvec surv = km_mat.col(2);
+  const arma::colvec haz = km_mat.col(3);
 
-  // Expectation: E{D(t)}.
-  arma::colvec exp = surv % (value_sums / nar);
+  // Proportion at risk.
+  const arma::colvec y = nar / n;
+
+  // Expectation E{D(t)}.
+  arma::colvec exp = surv % (d / y);
   if(replace_na) {
   	exp.replace(arma::datum::nan, 0);
   }
@@ -555,10 +572,11 @@ SEXP EstimatorR(
   return Rcpp::DataFrame::create(
     Rcpp::Named("time")=unique_times,
     Rcpp::Named("nar")=nar,
+    Rcpp::Named("y")=y,
     Rcpp::Named("haz")=haz,
     Rcpp::Named("surv")=surv,
-    Rcpp::Named("sum_value")=value_sums,
-    Rcpp::Named("exp_value")=exp
+    Rcpp::Named("d")=d,
+    Rcpp::Named("exp")=exp
   );
 }
 
@@ -599,24 +617,23 @@ arma::mat EstimatorCpp(
   eval_times = Truncate(eval_times, trunc_time);
   const int n_times = eval_times.size();
 
-  // Construct a subject (row) by evaluation time (col) matrix.
+  // Tabulate D_{i}(t).
   arma::mat value_mat = ValueMatrixCpp(eval_times, idx, time, value);
-  // Rcpp::Rcout << value_mat << std::endl; 
 
-  // Column sums.
-  arma::colvec value_means = arma::trans(arma::sum(value_mat, 0)) / n;
+  // Estimate d(t).
+  arma::colvec d = arma::trans(arma::sum(value_mat, 0)) / n;
   
   // Construct Kaplan-Meier curve: evalulation time (row) by 2.
   arma::mat km_mat =  KaplanMeierCpp(eval_times, idx, status, time);
   if(replace_na) {
   	km_mat.replace(arma::datum::nan, 0);
   }
-  arma::colvec y = km_mat.col(0) / n;
-  arma::colvec surv = km_mat.col(1);
-  arma::colvec haz = km_mat.col(2);
+  arma::colvec y = km_mat.col(1) / n;
+  arma::colvec surv = km_mat.col(2);
+  arma::colvec haz = km_mat.col(3);
 
   // Expectation: E{D(t)}.
-  arma::colvec exp = surv % (value_means / y);
+  arma::colvec exp = surv % (d / y);
   if(replace_na) {
   	exp.replace(arma::datum::nan, 0);
   }
@@ -633,7 +650,7 @@ arma::mat EstimatorCpp(
   } else {
 
     arma::mat out = arma::join_rows(eval_times, y, haz, surv);
-    out = arma::join_rows(out, value_means, exp);
+    out = arma::join_rows(out, d, exp);
   	return out;
 
   }
@@ -745,7 +762,6 @@ arma::mat DrawBootstrapCpp(
 //' @param trunc_time Truncation time? Optional. If omitted, defaults
 //' to the maximum evaluation time.
 //' @return Numeric matrix.
-//' @export
 // [[Rcpp::export]]
 
 SEXP BootstrapSamplesR(
@@ -760,6 +776,7 @@ SEXP BootstrapSamplesR(
   const Rcpp::Nullable<double> trunc_time=R_NilValue
 ){
   
+  // Truncation time.
   double tau;
   if(trunc_time.isNotNull()) {
     tau = Rcpp::as<double>(trunc_time);
@@ -768,57 +785,44 @@ SEXP BootstrapSamplesR(
     tau = eval_times.max();
   }
 
+  // Structure to store bootstrap samples.
+  arma::mat samples;
   if(return_auc) {
-
-    arma::colvec samples(boot);
-
-    for(int b=0; b<boot; b++) {
-
-      arma::mat boot_data = DrawBootstrapCpp(idx, status, time, value);
-      arma::mat auc = EstimatorCpp(
-        eval_times,
-        boot_data.col(0),
-        boot_data.col(1),
-        boot_data.col(2),
-        tau,
-        boot_data.col(3),
-        replace_na, 
-        return_auc
-      );
-
-      samples(b) = auc(0);
-
-    }
-
-    return Rcpp::wrap(samples);
-
+    samples = arma::zeros(boot);
   } else {
-
     const int n_times = eval_times.size();
-    arma::mat samples(n_times, boot);
+    samples = arma::zeros(n_times, boot);
+  }
 
-    for(int b=0; b<boot; b++) {
+  // Loop over bootstrap samples.
+  for(int b=0; b<boot; b++) {
 
-      arma::mat boot_data = DrawBootstrapCpp(idx, status, time, value);
-      
-      arma::mat est = EstimatorCpp(
-        eval_times,
-        boot_data.col(0),
-        boot_data.col(1),
-        boot_data.col(2),
-        tau,
-        boot_data.col(3),
-        replace_na, 
-        return_auc
-      );
+    arma::mat boot_data = DrawBootstrapCpp(idx, status, time, value);
 
-      samples.col(b) = est.col(4);
+    arma::colvec boot_idx = boot_data.col(0);
+    arma::colvec boot_status = boot_data.col(1);
+    arma::colvec boot_time = boot_data.col(2);
+    arma::colvec boot_value = boot_data.col(3);
 
+    arma::mat est = EstimatorCpp(
+      eval_times,
+      boot_idx,
+      boot_status,
+      boot_time,
+      tau,
+      boot_value,
+      replace_na, 
+      return_auc
+    );
+
+    if(return_auc) {
+      samples(b, 0) = est(0, 0);
+    } else {
+      samples.col(b) = est.col(5);
     }
+  }
 
   return Rcpp::wrap(arma::trans(samples));
-
-  }
 }
 
 
@@ -1154,7 +1158,6 @@ arma::colvec CalcI3Cpp(
 //' to the maximum evaluation time.
 //' @param value Observation value.
 //' @return Data.frame.
-//' @export 
 // [[Rcpp::export]]
 
 SEXP InfluenceR(

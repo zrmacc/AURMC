@@ -4,7 +4,7 @@
 \alias{GenData}
 \title{Simulate Repeated Measures Data}
 \usage{
-GenData(censoring_rate, death_rate, n, tau)
+GenData(censoring_rate, death_rate, n, tau, value_mean = 0, value_sd = 1)
 }
 \arguments{
 \item{censoring_rate}{Rate for the time to death.}
@@ -14,6 +14,10 @@ GenData(censoring_rate, death_rate, n, tau)
 \item{n}{Number of subjects.}
 
 \item{tau}{Truncation time.}
+
+\item{value_mean}{Mean of measurement.}
+
+\item{value_sd}{Standard deviation of measurement.}
 }
 \value{
 Data.frame.

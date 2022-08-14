@@ -13,11 +13,8 @@ test_that("Calculation of mu.", {
     status = data$status,
     time = data$time,
     trunc_time = 1.0,
-    value = data$values
+    value = data$value
   )
-  n <- est$nar[1]
-  est$y <- est$nar / n
-  est$d <- est$sum_value / n
   
   # Observed.
   obs <- CalcMuR(
@@ -155,10 +152,6 @@ test_that("Calculation of influence function.", {
     value = data$value,
     trunc_time = 3
   )
-
-  n <- 4
-  est$y <- est$nar / n
-  est$d <- est$sum_value / n
   
   # Calculate mu.
   mu <- CalcMuR(

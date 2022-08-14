@@ -19,5 +19,5 @@ ValueMatrixR(eval_times, idx, time, value)
 Numeric matrix.
 }
 \description{
-Construct a subject (row) by evaluation time (col) matrix.
+Tabulate \eqn{D_{i}(t)} with subjects as rows and evaluation times as columns.
 }

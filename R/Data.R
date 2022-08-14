@@ -8,13 +8,17 @@
 #' @param death_rate Rate for the time to death.
 #' @param idx Subject index.
 #' @param tau Truncation time.
+#' @param value_mean Mean of measurement.
+#' @param value_sd Standard deviation of measurement.
 #' @return Data.frame.
 #' @noRd
 SimSubj <- function(
     censoring_rate,
     death_rate,
     idx,
-    tau
+    tau,
+    value_mean = 0,
+    value_sd = 1
 ) {
   
   # Censoring time.
@@ -34,14 +38,18 @@ SimSubj <- function(
   
   # Observations.
   obs_times <- seq(from = 0, to = floor(time))
-  obs_values <- stats::rnorm(n = length(obs_times))
+  obs_values <- stats::rnorm(
+    n = length(obs_times),
+    mean = value_mean,
+    sd = value_sd
+  )
   
   # Output.
   out <- data.frame(
     idx = idx,
     time = c(obs_times, time),
     status = c(rep(1, length(obs_times)), status),
-    values = c(obs_values, NA)
+    value = c(obs_values, NA)
   )
   return(out)
 }
@@ -54,17 +62,21 @@ SimSubj <- function(
 #' @param death_rate Rate for the time to death.
 #' @param n Number of subjects.
 #' @param tau Truncation time.
+#' @param value_mean Mean of measurement.
+#' @param value_sd Standard deviation of measurement.
 #' @return Data.frame.
 #' @export
 GenData <- function(
     censoring_rate,
     death_rate,
     n,
-    tau
+    tau,
+    value_mean = 0,
+    value_sd = 1
 ) {
   
   data <- lapply(seq_len(n), function(i) {
-    SimSubj(censoring_rate, death_rate, i, tau)
+    SimSubj(censoring_rate, death_rate, i, tau, value_mean, value_sd)
   })
   out <- do.call(rbind, data)
   return(out)

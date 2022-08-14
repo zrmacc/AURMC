@@ -3,14 +3,13 @@
 
 #' Tabulate Value Matrix R
 #'
-#' Construct a subject (row) by evaluation time (col) matrix.
+#' Tabulate \eqn{D_{i}(t)} with subjects as rows and evaluation times as columns.
 #'  
 #' @param eval_times Evaluation times.
 #' @param idx Unique subject index. 
 #' @param time Observation time.
 #' @param value Observation value.
 #' @return Numeric matrix.
-#' @export
 ValueMatrixR <- function(eval_times, idx, time, value) {
     .Call(`_AURMC_ValueMatrixR`, eval_times, idx, time, value)
 }
@@ -23,15 +22,19 @@ ValueMatrixR <- function(eval_times, idx, time, value) {
 #' @param idx Unique subject index. 
 #' @param time Observation time.
 #' @return Numeric matrix.
-#' @export
 AtRiskMatrixR <- function(eval_times, idx, time) {
     .Call(`_AURMC_AtRiskMatrixR`, eval_times, idx, time)
 }
 
 #' Tabulate Kaplan Meier R
 #'
-#' Constructs a matrix with evaluation times as rows, and 3 columns, for 
-#' time, number at risk, and Kaplan-Meier survival probability.
+#' Constructs a matrix with evaluation times as rows, and 4 columns:
+#' \itemize{
+#' \item{time}{Evaluation times.}
+#' \item{nar}{Number at risk.}
+#' \item{surv}{Survival probability.}
+#' \item{haz}{Hazard.}
+#' }
 #'  
 #' @param eval_times Evaluation times.
 #' @param idx Unique subject index.
@@ -55,7 +58,6 @@ KaplanMeierR <- function(eval_times, idx, status, time) {
 #' @param trunc_time Truncation time? Optional. If omitted, defaults
 #' to the maximum evaluation time.
 #' @return Data.frame.
-#' @export 
 EstimatorR <- function(idx, status, time, value, eval_times = NULL, replace_na = FALSE, return_auc = FALSE, trunc_time = NULL) {
     .Call(`_AURMC_EstimatorR`, idx, status, time, value, eval_times, replace_na, return_auc, trunc_time)
 }
@@ -88,7 +90,6 @@ DrawBootstrapR <- function(idx, status, time, value) {
 #' @param trunc_time Truncation time? Optional. If omitted, defaults
 #' to the maximum evaluation time.
 #' @return Numeric matrix.
-#' @export
 BootstrapSamplesR <- function(boot, eval_times, idx, status, time, value, replace_na = FALSE, return_auc = FALSE, trunc_time = NULL) {
     .Call(`_AURMC_BootstrapSamplesR`, boot, eval_times, idx, status, time, value, replace_na, return_auc, trunc_time)
 }
@@ -136,7 +137,6 @@ CalcMartingaleCpp <- function(haz, idx, status, time, unique_times) {
 #' to the maximum evaluation time.
 #' @param value Observation value.
 #' @return Data.frame.
-#' @export 
 InfluenceR <- function(idx, status, time, trunc_time, value) {
     .Call(`_AURMC_InfluenceR`, idx, status, time, trunc_time, value)
 }
