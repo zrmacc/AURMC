@@ -1071,7 +1071,7 @@ arma::colvec CalcI1Cpp(
 
 // Calculate I2
 //
-// Calculate \eqn{I_{2,i} = S(t)\{D_{i}(t) - d(t)\}/y(t)}.
+// Calculate \eqn{I_{2,i} = \int_{0}^{\tau} S(t)\{D_{i}(t) - d(t)\}/y(t) dt}.
 // 
 // @param d Vector of d(t).
 // @param surv Vector of S(t).
@@ -1107,7 +1107,7 @@ arma::colvec CalcI2Cpp(
 
 // Calculate I3
 //
-// Calculate \eqn{I_{3,i} = -S(t)d(t)\{Y_{i}(t) - y(t)\} / y^2(t)}.
+// Calculate \eqn{I_{3,i} = \int_{0}^{\tau} -S(t)d(t)\{Y_{i}(t) - y(t)\} / y^2(t) dt}.
 // 
 // @param d Vector of d(t).
 // @param risk_mat Matrix of Y_{i}(t).
