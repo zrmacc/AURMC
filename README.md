@@ -53,7 +53,7 @@ The columns are:
 Note that:
 
 * All subjects must have a baseline record at `time = 0` with `status = 1`.
-* All subjects must have an *observation-terminating* event as their last event, either `status = 0` for censoring, or `status = 2` for the terminal event.
+* All subjects must have an *observation-terminating* event as their last record, either `status = 0` for censoring, or `status = 2` for the terminal event.
   - By default, a subject with no observation-terminating event is censored immediately after their last measurement.
 * If a subject's measurement value is missing, the last value is carried forward.
 
