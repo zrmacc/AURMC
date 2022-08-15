@@ -8,6 +8,7 @@
 AURMC(
   data,
   alpha = 0.05,
+  censor_after_last = TRUE,
   idx_name = "idx",
   status_name = "status",
   tau = NULL,
@@ -20,11 +21,14 @@ AURMC(
 
 \item{alpha}{Type I error.}
 
+\item{censor_after_last}{Introduce censoring after the last event \emph{if} no
+observation-terminating event is present.}
+
 \item{idx_name}{Name of column containing a unique subject index.}
 
-\item{status_name}{Name of column containing the status. Must be coded as 0 for
-censoring, 1 for a measurement, 2 for death. Each subject should have an
-observation-terminating event, either censoring or death.}
+\item{status_name}{Name of column containing the status. Must be coded as 0
+for censoring, 1 for a measurement, 2 for death. Each subject should have
+an observation-terminating event, either censoring or death.}
 
 \item{tau}{Truncation time.}
 

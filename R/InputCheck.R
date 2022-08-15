@@ -58,3 +58,37 @@ InputCheck <- function(data) {
   }
   return(invisible(NULL))
 }
+
+
+#' Censor After Last
+#' 
+#' Introduce a censoring after the last event if no observation
+#' terminating event is present.
+#' 
+#' @param data Data.frame.
+#' @return None.
+CensorAfterLast <- function(data) {
+  
+  split_data <- split(x = data, f = data$idx)
+  formatted_data <- lapply(split_data, function(df) {
+    
+    obs_end <- (df$status == 0 | df$status == 2)
+    any_obs_end <- any(obs_end)
+    
+    if (any_obs_end) {
+      return(df)
+    }
+    
+    # Add censoring record.
+    last_row <- df[nrow(df), ]
+    last_row$status <- 0
+    last_row$time <- last_row$time + 1e-4
+    df <- rbind(df, last_row)
+    return(df)
+    
+  })
+  
+  out <- do.call(rbind, formatted_data)
+  rownames(out) <- NULL
+  return(out)
+}

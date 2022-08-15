@@ -5,19 +5,22 @@
 #' 
 #' @param data Data.frame.
 #' @param alpha Type I error.
+#' @param censor_after_last Introduce censoring after the last event *if* no
+#'   observation-terminating event is present.
 #' @param idx_name Name of column containing a unique subject index.
-#' @param status_name Name of column containing the status. Must be coded as 0 for
-#'   censoring, 1 for a measurement, 2 for death. Each subject should have an 
-#'   observation-terminating event, either censoring or death.
+#' @param status_name Name of column containing the status. Must be coded as 0
+#'   for censoring, 1 for a measurement, 2 for death. Each subject should have
+#'   an observation-terminating event, either censoring or death.
 #' @param tau Truncation time.
 #' @param time_name Name of column containing the observation time.
 #' @param value_name Name of the column containing the measurement.
 #' @return Data.frame.
 #' @importFrom dplyr "%>%"
-#' @export 
+#' @export
 AURMC <- function(
   data,
   alpha = 0.05,
+  censor_after_last = TRUE,
   idx_name = "idx",
   status_name = "status",
   tau = NULL,
@@ -33,6 +36,11 @@ AURMC <- function(
       time = {{time_name}},
       value = {{value_name}}
     )
+  
+  # Censor after last.
+  if (censor_after_last) {
+    data <- CensorAfterLast(data)
+  }
   
   # Truncation time.
   if (is.null(tau)) {
