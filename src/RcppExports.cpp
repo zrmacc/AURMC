@@ -178,6 +178,21 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// InterpolateR
+SEXP InterpolateR(const arma::colvec idx, const arma::colvec status, const arma::colvec time, const arma::colvec value, const int n_points);
+RcppExport SEXP _AURMC_InterpolateR(SEXP idxSEXP, SEXP statusSEXP, SEXP timeSEXP, SEXP valueSEXP, SEXP n_pointsSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const arma::colvec >::type idx(idxSEXP);
+    Rcpp::traits::input_parameter< const arma::colvec >::type status(statusSEXP);
+    Rcpp::traits::input_parameter< const arma::colvec >::type time(timeSEXP);
+    Rcpp::traits::input_parameter< const arma::colvec >::type value(valueSEXP);
+    Rcpp::traits::input_parameter< const int >::type n_points(n_pointsSEXP);
+    rcpp_result_gen = Rcpp::wrap(InterpolateR(idx, status, time, value, n_points));
+    return rcpp_result_gen;
+END_RCPP
+}
 
 static const R_CallMethodDef CallEntries[] = {
     {"_AURMC_ValueMatrixR", (DL_FUNC) &_AURMC_ValueMatrixR, 4},
@@ -191,6 +206,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_AURMC_CalcMartingaleCpp", (DL_FUNC) &_AURMC_CalcMartingaleCpp, 5},
     {"_AURMC_InfluenceR", (DL_FUNC) &_AURMC_InfluenceR, 5},
     {"_AURMC_PerturbationR", (DL_FUNC) &_AURMC_PerturbationR, 6},
+    {"_AURMC_InterpolateR", (DL_FUNC) &_AURMC_InterpolateR, 5},
     {NULL, NULL, 0}
 };
 

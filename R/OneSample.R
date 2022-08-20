@@ -54,7 +54,7 @@ AURMC <- function(
   }
   
   # Check input.
-  InputCheck(data)
+  InputCheck(data, check_arm = FALSE)
   
   # Calculate AUC.
   auc <- EstimatorR(

@@ -38,7 +38,7 @@ AtRiskMatrixR <- function(eval_times, idx, time) {
 #'  
 #' @param eval_times Evaluation times.
 #' @param idx Unique subject index.
-#' @param status Status, 0 for censoring, 1 for event, 2 for death.
+#' @param status Status, coded as 0 for censoring, 1 for event, 2 for terminal event.
 #' @param time Observation time.
 #' @return Data.frame.
 KaplanMeierR <- function(eval_times, idx, status, time) {
@@ -48,7 +48,7 @@ KaplanMeierR <- function(eval_times, idx, status, time) {
 #' Tabulate Estimator R
 #'  
 #' @param idx Unique subject index. 
-#' @param status Status, coded as 0 for censoring, 1 for event. 
+#' @param status Status, coded as 0 for censoring, 1 for event, 2 for terminal event.
 #' @param time Observation time.
 #' @param value Observation value.
 #' @param eval_times Evalulation times. If omitted, defaults to the
@@ -65,7 +65,7 @@ EstimatorR <- function(idx, status, time, value, eval_times = NULL, replace_na =
 #' Draw Bootstrap R
 #'  
 #' @param idx Unique subject index. 
-#' @param status Status, coded as 0 for censoring, 1 for event. 
+#' @param status Status, coded as 0 for censoring, 1 for event, 2 for terminal event.
 #' @param time Observation time.
 #' @param value Observation value.
 #' @return Numeric matrix.
@@ -82,7 +82,7 @@ DrawBootstrapR <- function(idx, status, time, value) {
 #' @param boot Bootstrap replicates.
 #' @param eval_times Evaluation times.
 #' @param idx Unique subject index. 
-#' @param status Status, coded as 0 for censoring, 1 for event. 
+#' @param status Status, coded as 0 for censoring, 1 for event, 2 for terminal event.
 #' @param time Observation time.
 #' @param value Observation value.
 #' @param replace_na Replace NaN with zero?
@@ -113,7 +113,7 @@ CalcMuR <- function(d, surv, unique_times, y) {
 #' 
 #' @param haz Value of the hazard at each unique time.
 #' @param idx Subject index.
-#' @param status Subject status.
+#' @param status Status, coded as 0 for censoring, 1 for event, 2 for terminal event.
 #' @param time Subject observation times.
 #' @param unique_times Unique times at which to obtain the martingale.
 #' @return Matrix with subjects as rows and unique times as columns.
@@ -131,7 +131,7 @@ CalcMartingaleCpp <- function(haz, idx, status, time, unique_times) {
 #' integrals (`i1`, `i2`, `i3`) and the overall influence `psi`.
 #'  
 #' @param idx Unique subject index. 
-#' @param status Status, coded as 0 for censoring, 1 for event. 
+#' @param status Status, coded as 0 for censoring, 1 for event, 2 for terminal event.
 #' @param time Observation time.
 #' @param trunc_time Truncation time? Optional. If omitted, defaults
 #' to the maximum evaluation time.
@@ -152,7 +152,7 @@ InfluenceR <- function(idx, status, time, trunc_time, value) {
 #'  
 #' @param idx Unique subject index. 
 #' @param perturbations Number of perturbations
-#' @param status Status, coded as 0 for censoring, 1 for event. 
+#' @param status Status, coded as 0 for censoring, 1 for event, 2 for terminal event.
 #' @param time Observation time.
 #' @param trunc_time Truncation time? Optional. If omitted, defaults
 #' to the maximum evaluation time.
@@ -160,5 +160,21 @@ InfluenceR <- function(idx, status, time, trunc_time, value) {
 #' @return Numeric vector.
 PerturbationR <- function(idx, perturbations, status, time, trunc_time, value) {
     .Call(`_AURMC_PerturbationR`, idx, perturbations, status, time, trunc_time, value)
+}
+
+#' Interpolation R
+#'  
+#' Linearly interpolations between each subject's measurements.
+#' The input data should contain no missing values. 
+#'  
+#' @param idx Unique subject index. 
+#' @param status Status, coded as 0 for censoring, 1 for event, 2 for terminal event.
+#' @param time Observation time.
+#' @param value Observation value.
+#' @param n_points Number of interpolation points.
+#' @return Data.frame.
+#' @export
+InterpolateR <- function(idx, status, time, value, n_points = 100L) {
+    .Call(`_AURMC_InterpolateR`, idx, status, time, value, n_points)
 }
 

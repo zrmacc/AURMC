@@ -1,5 +1,5 @@
 # Purpose: Check input.
-# Updated: 2022-08-14
+# Updated: 2022-08-20
 
 
 #' Check Subject
@@ -38,13 +38,49 @@ CheckSubj <- function(idx, status, time) {
 }
 
 
+#' Arm Check
+#' 
+#' Check formatting of treatment arm.
+#' 
+#' @param arm Treatment arm.
+#' @param idx Subject index.
+#' @return Logical.
+#' @noRd
+CheckArm <- function(arm, idx) {
+  failed <- FALSE
+  
+  # Check coding.
+  arm_levels <- sort(unique(arm))
+  is_proper_coding <- all(arm_levels == c(0, 1))
+  if (!is_proper_coding) {
+    failed <- TRUE
+    warning("Treatment arm is improperly coded. Expecting two levels, c(0, 1).")
+  }
+  
+  # Check for non-unique index.
+  idx0 <- unique(idx[arm == 0])
+  idx1 <- unique(idx[arm == 1])
+  idx_overlap <- intersect(idx0, idx1)
+  if (length(idx_overlap) > 0) {
+    failed <- TRUE
+    msg <- "The following subject indices appear in both treatment arms:\n "
+    msg <- paste0(msg, paste(idx_overlap, collapse = ", "))
+    warning(msg)
+  }
+  
+  return(failed)
+}
+
+
 #' Input Check
 #' 
 #' Check for proper input formatting.
 #' 
 #' @param data Data.frame.
+#' @param check_arm Check arm?
 #' @return None.
-InputCheck <- function(data) {
+#' @noRd
+InputCheck <- function(data, check_arm = FALSE) {
   
   idx <- status <- time <- NULL
   check <- data %>%
@@ -54,31 +90,15 @@ InputCheck <- function(data) {
     )
   failed <- any(check$failed)
   
-  # Check treatment arm, if present.
-  if ("arm" %in% colnames(data)) {
-    # Check coding.
-    arm_levels <- sort(unique(data$arm))
-    is_proper_coding <- all(arm_levels == c(0, 1))
-    if (!is_proper_coding) {
-      failed <- TRUE
-      warning("Treatment arm is improperly coded. Expecting two levels, c(0, 1).")
-    }
-    
-    # Check for non-unique index.
-    idx0 <- unique(data$idx[data$arm == 0])
-    idx1 <- unique(data$idx[data$arm == 1])
-    idx_overlap <- intersect(idx0, idx1)
-    if (length(idx_overlap) > 0) {
-      failed <- TRUE
-      msg <- "The following subject indices appear in both treatment arms:\n "
-      msg <- paste0(msg, paste(idx_overlap, collapse = ", "))
-      warning(msg)
-    }
+  # Check treatment arm.
+  if (check_arm) {
+    failed <- any(failed, CheckArm(data$arm, data$idx))
   }
   
   if (failed) {
     stop("Input check failed.")
   }
+
   return(invisible(NULL))
 }
 

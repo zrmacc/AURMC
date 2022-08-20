@@ -11,7 +11,7 @@ CalcMartingaleR(haz, idx, status, time, unique_times)
 
 \item{idx}{Subject index.}
 
-\item{status}{Subject status.}
+\item{status}{Status, coded as 0 for censoring, 1 for event, 2 for terminal event.}
 
 \item{time}{Subject observation times.}
 

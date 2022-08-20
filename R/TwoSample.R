@@ -29,7 +29,7 @@ Diff <- function(one_sample, alpha = 0.05) {
 }
 
 
-#' Difference
+#' Ratio
 #'
 #' @param one_sample Data.frame of one sample results.
 #' @param alpha Type I error.
@@ -139,7 +139,7 @@ CompareAURMCs <- function(
   }
   
   # Check input.
-  InputCheck(data)
+  InputCheck(data, check_arm = TRUE)
   
   # Perform 1 sample inference.
   arm0 <- AURMC(

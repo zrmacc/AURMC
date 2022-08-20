@@ -11,7 +11,7 @@ KaplanMeierR(eval_times, idx, status, time)
 
 \item{idx}{Unique subject index.}
 
-\item{status}{Status, 0 for censoring, 1 for event, 2 for death.}
+\item{status}{Status, coded as 0 for censoring, 1 for event, 2 for terminal event.}
 
 \item{time}{Observation time.}
 }

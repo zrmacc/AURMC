@@ -321,7 +321,7 @@ arma::mat AtRiskMatrixCpp(
 //'  
 //' @param eval_times Evaluation times.
 //' @param idx Unique subject index.
-//' @param status Status, 0 for censoring, 1 for event, 2 for death.
+//' @param status Status, coded as 0 for censoring, 1 for event, 2 for terminal event.
 //' @param time Observation time.
 //' @return Data.frame.
 // [[Rcpp::export]]
@@ -412,7 +412,7 @@ SEXP KaplanMeierR(
 //
 // @param eval_times Evaluation times.
 // @param idx Unique subject index.
-// @param status Status, 0 for censoring, 1 for event, 2 for death.
+// @param status Status, coded as 0 for censoring, 1 for event, 2 for terminal event.
 // @param time Observation time.
 // @return Numeric matrix.
 
@@ -490,7 +490,7 @@ arma::mat KaplanMeierCpp(
 //' Tabulate Estimator R
 //'  
 //' @param idx Unique subject index. 
-//' @param status Status, coded as 0 for censoring, 1 for event. 
+//' @param status Status, coded as 0 for censoring, 1 for event, 2 for terminal event.
 //' @param time Observation time.
 //' @param value Observation value.
 //' @param eval_times Evalulation times. If omitted, defaults to the
@@ -591,7 +591,7 @@ SEXP EstimatorR(
 //  
 // @param eval_times Evaluation times.
 // @param idx Unique subject index. 
-// @param status Status, coded as 0 for censoring, 1 for event. 
+// @param status Status, coded as 0 for censoring, 1 for event, 2 for terminal event.
 // @param time Observation time.
 // @param value Observation value.
 // @param replace_na Replace NaN with zero?
@@ -664,7 +664,7 @@ arma::mat EstimatorCpp(
 //' Draw Bootstrap R
 //'  
 //' @param idx Unique subject index. 
-//' @param status Status, coded as 0 for censoring, 1 for event. 
+//' @param status Status, coded as 0 for censoring, 1 for event, 2 for terminal event.
 //' @param time Observation time.
 //' @param value Observation value.
 //' @return Numeric matrix.
@@ -706,7 +706,7 @@ SEXP DrawBootstrapR(
 // Draw Bootstrap Cpp
 //  
 // @param idx Unique subject index. 
-// @param status Status, coded as 0 for censoring, 1 for event. 
+// @param status Status, coded as 0 for censoring, 1 for event, 2 for terminal event.
 // @param time Observation time.
 // @param value Observation value.
 // @return Numeric matrix.
@@ -754,7 +754,7 @@ arma::mat DrawBootstrapCpp(
 //' @param boot Bootstrap replicates.
 //' @param eval_times Evaluation times.
 //' @param idx Unique subject index. 
-//' @param status Status, coded as 0 for censoring, 1 for event. 
+//' @param status Status, coded as 0 for censoring, 1 for event, 2 for terminal event.
 //' @param time Observation time.
 //' @param value Observation value.
 //' @param replace_na Replace NaN with zero?
@@ -905,7 +905,7 @@ arma::colvec CalcMuCpp(
 //' 
 //' @param haz Value of the hazard at each unique time.
 //' @param idx Subject index.
-//' @param status Subject status.
+//' @param status Status, coded as 0 for censoring, 1 for event, 2 for terminal event.
 //' @param time Subject observation times.
 //' @param unique_times Unique times at which to obtain the martingale.
 //' @return Matrix with subjects as rows and unique times as columns.
@@ -1152,7 +1152,7 @@ arma::colvec CalcI3Cpp(
 //' integrals (`i1`, `i2`, `i3`) and the overall influence `psi`.
 //'  
 //' @param idx Unique subject index. 
-//' @param status Status, coded as 0 for censoring, 1 for event. 
+//' @param status Status, coded as 0 for censoring, 1 for event, 2 for terminal event.
 //' @param time Observation time.
 //' @param trunc_time Truncation time? Optional. If omitted, defaults
 //' to the maximum evaluation time.
@@ -1233,12 +1233,12 @@ SEXP InfluenceR(
 // only.
 // 
 // @param idx Unique subject index. 
-// @param status Status, coded as 0 for censoring, 1 for event. 
+// @param status Status, coded as 0 for censoring, 1 for event, 2 for terminal event. 
 // @param time Observation time.
 // @param trunc_time Truncation time? Optional. If omitted, defaults
 // to the maximum evaluation time.
 // @param value Observation value.
-// @return Data.frame.
+// @return Numeric vector.
 
 arma::colvec InfluenceCpp(
     const arma::colvec idx,
@@ -1314,7 +1314,7 @@ arma::colvec InfluenceCpp(
 //'  
 //' @param idx Unique subject index. 
 //' @param perturbations Number of perturbations
-//' @param status Status, coded as 0 for censoring, 1 for event. 
+//' @param status Status, coded as 0 for censoring, 1 for event, 2 for terminal event.
 //' @param time Observation time.
 //' @param trunc_time Truncation time? Optional. If omitted, defaults
 //' to the maximum evaluation time.
@@ -1341,4 +1341,71 @@ SEXP PerturbationR(
   }
   
   return Rcpp::wrap(out);
+}
+
+
+// ----------------------------------------------------------------------------
+
+
+//' Interpolation R
+//'  
+//' Linearly interpolations between each subject's measurements.
+//' The input data should contain no missing values. 
+//'  
+//' @param idx Unique subject index. 
+//' @param status Status, coded as 0 for censoring, 1 for event, 2 for terminal event.
+//' @param time Observation time.
+//' @param value Observation value.
+//' @param n_points Number of interpolation points.
+//' @return Data.frame.
+//' @export
+// [[Rcpp::export]]
+
+SEXP InterpolateR(
+    const arma::colvec idx,
+    const arma::colvec status,
+    const arma::colvec time,
+    const arma::colvec value,
+    const int n_points = 100
+){
+  
+  // Subjects.
+  const arma::colvec unique_idx = arma::unique(idx);
+  const int n = unique_idx.size();
+  
+  // Output structure.
+  arma::colvec out_idx = arma::zeros(n * n_points);
+  arma::colvec out_status = arma::ones(n * n_points);
+  arma::colvec out_time = arma::zeros(n * n_points);
+  arma::colvec out_value = arma::zeros(n * n_points);
+
+  for(int i=0; i<n; i++) {
+    
+    // Current subject.
+    arma::colvec subj_status = status.elem(arma::find(idx == unique_idx(i)));
+    double final_status = subj_status(subj_status.size() - 1);
+    arma::colvec subj_time = time.elem(arma::find(idx == unique_idx(i)));
+    arma::colvec subj_value = value.elem(arma::find(idx == unique_idx(i)));
+    
+    // Interpolation points.
+    arma::colvec grid = arma::linspace<arma::colvec>(0, subj_time.max(), n_points);
+    arma::colvec yhat;
+    arma::interp1(subj_time, subj_value, grid, yhat, "linear");
+    
+    // Store.
+    int first_idx = i * n_points;
+    int last_idx = (i + 1) * n_points - 1;
+    out_idx(arma::span(first_idx, last_idx)) = unique_idx(i) * arma::ones(n_points);
+    out_status(last_idx) = final_status;
+    out_time(arma::span(first_idx, last_idx)) = grid;
+    out_value(arma::span(first_idx, last_idx)) = yhat;
+  }
+  
+  // Output.
+  return Rcpp::DataFrame::create(
+    Rcpp::Named("idx")=out_idx,
+    Rcpp::Named("status")=out_status,
+    Rcpp::Named("time")=out_time,
+    Rcpp::Named("value")=out_value
+  );
 }

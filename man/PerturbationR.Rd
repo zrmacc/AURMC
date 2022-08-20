@@ -15,7 +15,7 @@ PerturbationR(idx, perturbations, status, time, trunc_time, value)
 
 \item{perturbations}{Number of perturbations}
 
-\item{status}{Status, coded as 0 for censoring, 1 for event.}
+\item{status}{Status, coded as 0 for censoring, 1 for event, 2 for terminal event.}
 
 \item{time}{Observation time.}
 
