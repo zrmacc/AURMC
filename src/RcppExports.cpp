@@ -162,6 +162,22 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// PerturbationR
+SEXP PerturbationR(const arma::colvec idx, const int perturbations, const arma::colvec status, const arma::colvec time, const double trunc_time, const arma::colvec value);
+RcppExport SEXP _AURMC_PerturbationR(SEXP idxSEXP, SEXP perturbationsSEXP, SEXP statusSEXP, SEXP timeSEXP, SEXP trunc_timeSEXP, SEXP valueSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const arma::colvec >::type idx(idxSEXP);
+    Rcpp::traits::input_parameter< const int >::type perturbations(perturbationsSEXP);
+    Rcpp::traits::input_parameter< const arma::colvec >::type status(statusSEXP);
+    Rcpp::traits::input_parameter< const arma::colvec >::type time(timeSEXP);
+    Rcpp::traits::input_parameter< const double >::type trunc_time(trunc_timeSEXP);
+    Rcpp::traits::input_parameter< const arma::colvec >::type value(valueSEXP);
+    rcpp_result_gen = Rcpp::wrap(PerturbationR(idx, perturbations, status, time, trunc_time, value));
+    return rcpp_result_gen;
+END_RCPP
+}
 
 static const R_CallMethodDef CallEntries[] = {
     {"_AURMC_ValueMatrixR", (DL_FUNC) &_AURMC_ValueMatrixR, 4},
@@ -174,6 +190,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_AURMC_CalcMartingaleR", (DL_FUNC) &_AURMC_CalcMartingaleR, 5},
     {"_AURMC_CalcMartingaleCpp", (DL_FUNC) &_AURMC_CalcMartingaleCpp, 5},
     {"_AURMC_InfluenceR", (DL_FUNC) &_AURMC_InfluenceR, 5},
+    {"_AURMC_PerturbationR", (DL_FUNC) &_AURMC_PerturbationR, 6},
     {NULL, NULL, 0}
 };
 

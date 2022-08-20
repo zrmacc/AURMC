@@ -1,5 +1,6 @@
 # Purpose: Main estimation and inference function.
-# Updated: 2022-08-14
+# Updated: 2022-08-20
+
 
 #' Area Under the Repeated Measures Curve
 #' 
@@ -8,6 +9,9 @@
 #' @param censor_after_last Introduce censoring after the last event *if* no
 #'   observation-terminating event is present.
 #' @param idx_name Name of column containing a unique subject index.
+#' @param perturbations Number of perturbations to use for bootstrap inference.
+#'   If \code{NULL}, only analytical inference is performed.
+#' @param random_state Seed to ensure perturbations are reproducible. 
 #' @param status_name Name of column containing the status. Must be coded as 0
 #'   for censoring, 1 for a measurement, 2 for death. Each subject should have
 #'   an observation-terminating event, either censoring or death.
@@ -22,6 +26,8 @@ AURMC <- function(
   alpha = 0.05,
   censor_after_last = TRUE,
   idx_name = "idx",
+  perturbations = NULL,
+  random_state = 0,
   status_name = "status",
   tau = NULL,
   time_name = "time",
@@ -71,10 +77,11 @@ AURMC <- function(
   )
   se <- sqrt(mean(psi$psi^2) / n)
   
-  # Prepare output.
+  # Asymptotic output.
   z <- stats::qnorm(p = 1 - alpha / 2)
   p <- stats::pchisq(q = (auc / se)^2, df = 1, lower.tail = FALSE)
   out <- data.frame(
+    method = "asymptotic",
     tau = tau,
     auc = auc,
     se = se
@@ -82,5 +89,43 @@ AURMC <- function(
   out$lower <- out$auc - z * out$se
   out$upper <- out$auc + z * out$se
   out$p <- p
+  
+  # Run perturbation.
+  if (!is.null(perturbations)) {
+    set.seed(random_state)
+    deltas <- PerturbationR(
+      idx = data$idx,
+      perturbations = perturbations,
+      status = data$status,
+      time = data$time,
+      trunc_time = tau,
+      value = data$value
+    )
+    
+    # Bootstrap SE.
+    boot_se <- stats::sd(deltas)
+    
+    # Bootstrap CI.
+    auc_jitter <- auc + deltas
+    boot_ci <- stats::quantile(auc_jitter, probs = c(alpha / 2, 1 - alpha / 2))
+    boot_ci <- as.numeric(boot_ci)
+    
+    # Bootstrap P.
+    boot_p <- 2 * mean(sign(auc_jitter) != sign(auc))
+    boot_p <- max(boot_p, 1 / perturbations)
+    boot_p <- min(boot_p, 1)
+    
+    # Bootstrap results.
+    out_boot <- data.frame(
+      method = "bootstrap",
+      tau = tau,
+      auc = auc,
+      se = boot_se,
+      lower = boot_ci[1],
+      upper = boot_ci[2],
+      p = boot_p
+    )
+    out <- rbind(out, out_boot)
+  }
   return(out)
 }

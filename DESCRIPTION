@@ -1,6 +1,6 @@
 Package: AURMC
 Title: Area Under the Repeated Measures Curve
-Version: 0.0.1
+Version: 0.0.2
 Authors@R: 
     person(given = "Zachary",
            family = "McCaw",
@@ -20,6 +20,8 @@ LinkingTo:
     RcppArmadillo,
     Rcpp
 Imports:
-    dplyr, 
+    dplyr,
+    methods,
     RcppArmadillo,
-    Rcpp
+    Rcpp,
+    tibble

@@ -141,3 +141,24 @@ InfluenceR <- function(idx, status, time, trunc_time, value) {
     .Call(`_AURMC_InfluenceR`, idx, status, time, trunc_time, value)
 }
 
+#' Perturbation R
+#'  
+#' Generates realizations of \eqn{\frac{1}{n}\sum_{i=1}^{n}\psi_{i}w_{i}},
+#' where \eqn{\psi_{i}} is the influence function for the ith subject and the
+#' \eqn{w_{i}} are IID random weights.
+#' 
+#' @section Notes:
+#' The random seed should be set in R prior to calling this function.
+#'  
+#' @param idx Unique subject index. 
+#' @param perturbations Number of perturbations
+#' @param status Status, coded as 0 for censoring, 1 for event. 
+#' @param time Observation time.
+#' @param trunc_time Truncation time? Optional. If omitted, defaults
+#' to the maximum evaluation time.
+#' @param value Observation value.
+#' @return Numeric vector.
+PerturbationR <- function(idx, perturbations, status, time, trunc_time, value) {
+    .Call(`_AURMC_PerturbationR`, idx, perturbations, status, time, trunc_time, value)
+}
+

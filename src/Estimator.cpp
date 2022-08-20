@@ -1225,3 +1225,120 @@ SEXP InfluenceR(
     Rcpp::Named("psi")=psi
   );
 }
+
+
+// Influence Function R
+// 
+// Influence function contributions for the AUC. Returns the overall influence
+// only.
+// 
+// @param idx Unique subject index. 
+// @param status Status, coded as 0 for censoring, 1 for event. 
+// @param time Observation time.
+// @param trunc_time Truncation time? Optional. If omitted, defaults
+// to the maximum evaluation time.
+// @param value Observation value.
+// @return Data.frame.
+
+arma::colvec InfluenceCpp(
+    const arma::colvec idx,
+    const arma::colvec status,
+    const arma::colvec time,
+    const double trunc_time,
+    const arma::colvec value
+){
+  
+  // Subjects.
+  const arma::colvec unique_idx = arma::unique(idx);
+  // const int n = unique_idx.size();
+  
+  // Unique times.
+  arma::colvec unique_times = arma::unique(time);
+  unique_times = Truncate(unique_times, trunc_time);
+  // const int n_times = unique_times.size();
+  
+  // Return columns: {0: time, 1: y, 2: haz, 3: surv, 4: d, 5: exp}.
+  arma::mat est = EstimatorCpp(
+    unique_times, idx, status, time, trunc_time, value);
+  // Rcpp::Rcout << est << std::endl; 
+  
+  const arma::colvec y = est.col(1);
+  const arma::colvec haz = est.col(2);
+  const arma::colvec surv = est.col(3);
+  const arma::colvec d = est.col(4);
+  
+  // Calculate mu.
+  const arma::colvec mu = CalcMuCpp(d, surv, unique_times, y);
+  // Rcpp::Rcout << mu << std::endl; 
+  
+  // Calculate martingales.
+  const arma::mat dm = CalcMartingaleCpp(haz, idx, status, time, unique_times);
+  // Rcpp::Rcout << dm << std::endl; 
+  
+  // Calculate I1.
+  const arma::colvec i1 = CalcI1Cpp(dm, mu, y);
+  // Rcpp::Rcout << i1 << std::endl; 
+  
+  // Calculate value matrix.
+  const arma::mat value_mat = ValueMatrixCpp(unique_times, idx, time, value);
+  
+  // Calculate I2.
+  const arma::colvec i2 = CalcI2Cpp(d, surv, unique_times, value_mat, y);
+  // Rcpp::Rcout << i2 << std::endl; 
+  
+  // Calculate at risk matrix.
+  const arma::mat risk_mat = AtRiskMatrixCpp(unique_times, idx, time);
+  
+  // Calculate I3.
+  const arma::colvec i3 = CalcI3Cpp(d, risk_mat, surv, unique_times, y);
+  // Rcpp::Rcout << i3 << std::endl; 
+  
+  // Overall influence funciton.
+  const arma::colvec psi = i1 + i2 + i3;
+  
+  // Output.
+  return psi;
+}
+
+
+// ----------------------------------------------------------------------------
+
+//' Perturbation R
+//'  
+//' Generates realizations of \eqn{\frac{1}{n}\sum_{i=1}^{n}\psi_{i}w_{i}},
+//' where \eqn{\psi_{i}} is the influence function for the ith subject and the
+//' \eqn{w_{i}} are IID random weights.
+//' 
+//' @section Notes:
+//' The random seed should be set in R prior to calling this function.
+//'  
+//' @param idx Unique subject index. 
+//' @param perturbations Number of perturbations
+//' @param status Status, coded as 0 for censoring, 1 for event. 
+//' @param time Observation time.
+//' @param trunc_time Truncation time? Optional. If omitted, defaults
+//' to the maximum evaluation time.
+//' @param value Observation value.
+//' @return Numeric vector.
+// [[Rcpp::export]]
+
+SEXP PerturbationR(
+    const arma::colvec idx,
+    const int perturbations,
+    const arma::colvec status,
+    const arma::colvec time,
+    const double trunc_time,
+    const arma::colvec value
+){
+
+  arma::colvec out = arma::zeros(perturbations);
+  arma::colvec psi = InfluenceCpp(idx, status, time, trunc_time, value);
+  arma::colvec weights(psi.size());
+  
+  for(int i=0; i<perturbations; i++) {
+    weights = arma::randn(psi.size());
+    out(i) = arma::mean(psi % weights);
+  }
+  
+  return Rcpp::wrap(out);
+}

@@ -53,6 +53,29 @@ InputCheck <- function(data) {
       failed = CheckSubj(idx, status, time)
     )
   failed <- any(check$failed)
+  
+  # Check treatment arm, if present.
+  if ("arm" %in% colnames(data)) {
+    # Check coding.
+    arm_levels <- sort(unique(data$arm))
+    is_proper_coding <- all(arm_levels == c(0, 1))
+    if (!is_proper_coding) {
+      failed <- TRUE
+      warning("Treatment arm is improperly coded. Expecting two levels, c(0, 1).")
+    }
+    
+    # Check for non-unique index.
+    idx0 <- unique(data$idx[data$arm == 0])
+    idx1 <- unique(data$idx[data$arm == 1])
+    idx_overlap <- intersect(idx0, idx1)
+    if (length(idx_overlap) > 0) {
+      failed <- TRUE
+      msg <- "The following subject indices appear in both treatment arms:\n "
+      msg <- paste0(msg, paste(idx_overlap, collapse = ", "))
+      warning(msg)
+    }
+  }
+  
   if (failed) {
     stop("Input check failed.")
   }
