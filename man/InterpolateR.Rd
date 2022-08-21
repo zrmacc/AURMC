@@ -7,9 +7,11 @@
 Linearly interpolations between each subject's measurements.
 The input data should contain no missing values.}
 \usage{
-InterpolateR(idx, status, time, value, n_points = 100L)
+InterpolateR(grid, idx, status, time, value)
 }
 \arguments{
+\item{grid}{Grid of unique points at which to interpolate.}
+
 \item{idx}{Unique subject index.}
 
 \item{status}{Status, coded as 0 for censoring, 1 for event, 2 for terminal event.}
@@ -17,8 +19,6 @@ InterpolateR(idx, status, time, value, n_points = 100L)
 \item{time}{Observation time.}
 
 \item{value}{Observation value.}
-
-\item{n_points}{Number of interpolation points.}
 }
 \value{
 Data.frame.

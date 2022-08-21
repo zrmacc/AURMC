@@ -1352,21 +1352,20 @@ SEXP PerturbationR(
 //' Linearly interpolations between each subject's measurements.
 //' The input data should contain no missing values. 
 //'  
+//' @param grid Grid of unique points at which to interpolate.
 //' @param idx Unique subject index. 
 //' @param status Status, coded as 0 for censoring, 1 for event, 2 for terminal event.
 //' @param time Observation time.
 //' @param value Observation value.
-//' @param n_points Number of interpolation points.
 //' @return Data.frame.
-//' @export
 // [[Rcpp::export]]
 
 SEXP InterpolateR(
+    const arma::colvec grid,
     const arma::colvec idx,
     const arma::colvec status,
     const arma::colvec time,
-    const arma::colvec value,
-    const int n_points = 100
+    const arma::colvec value
 ){
   
   // Subjects.
@@ -1374,6 +1373,7 @@ SEXP InterpolateR(
   const int n = unique_idx.size();
   
   // Output structure.
+  int n_points = grid.size();
   arma::colvec out_idx = arma::zeros(n * n_points);
   arma::colvec out_status = arma::ones(n * n_points);
   arma::colvec out_time = arma::zeros(n * n_points);
@@ -1385,18 +1385,26 @@ SEXP InterpolateR(
     arma::colvec subj_status = status.elem(arma::find(idx == unique_idx(i)));
     double final_status = subj_status(subj_status.size() - 1);
     arma::colvec subj_time = time.elem(arma::find(idx == unique_idx(i)));
+    double final_time = subj_time.max();
     arma::colvec subj_value = value.elem(arma::find(idx == unique_idx(i)));
     
     // Interpolation points.
-    arma::colvec grid = arma::linspace<arma::colvec>(0, subj_time.max(), n_points);
     arma::colvec yhat;
     arma::interp1(subj_time, subj_value, grid, yhat, "linear");
+    
+    // Align status to grid.
+    subj_status = arma::ones(n_points);
+    for(int j=0; j<n_points; j++) {
+      if(grid(j) >= final_time) {
+        subj_status(j) = final_status;
+      }
+    }
     
     // Store.
     int first_idx = i * n_points;
     int last_idx = (i + 1) * n_points - 1;
     out_idx(arma::span(first_idx, last_idx)) = unique_idx(i) * arma::ones(n_points);
-    out_status(last_idx) = final_status;
+    out_status(arma::span(first_idx, last_idx)) = subj_status;
     out_time(arma::span(first_idx, last_idx)) = grid;
     out_value(arma::span(first_idx, last_idx)) = yhat;
   }

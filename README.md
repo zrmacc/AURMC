@@ -84,25 +84,21 @@ show(data)
     ## 4   2      2    1    -1
 
 ``` r
-interpolated_data <- AURMC::InterpolateR(
-  idx = data$idx,
-  status = data$status,
-  time = data$time,
-  value = data$value,
-  n_points = 4
+grid <- c(0, 0.5, 1.0)
+interpolated <- AURMC::Interpolate(
+  data = data,
+  grid = grid
 )
-show(interpolated_data)
+show(interpolated)
 ```
 
-    ##   idx status      time      value
-    ## 1   1      1 0.0000000  0.0000000
-    ## 2   1      1 0.3333333  0.3333333
-    ## 3   1      1 0.6666667  0.6666667
-    ## 4   1      0 1.0000000  1.0000000
-    ## 5   2      1 0.0000000  0.0000000
-    ## 6   2      1 0.3333333 -0.3333333
-    ## 7   2      1 0.6666667 -0.6666667
-    ## 8   2      2 1.0000000 -1.0000000
+    ##   idx status time value
+    ## 1   1      1  0.0   0.0
+    ## 2   1      1  0.5   0.5
+    ## 3   1      0  1.0   1.0
+    ## 4   2      1  0.0   0.0
+    ## 5   2      1  0.5  -0.5
+    ## 6   2      2  1.0  -1.0
 
 ## One-sample Problem
 

@@ -167,14 +167,13 @@ PerturbationR <- function(idx, perturbations, status, time, trunc_time, value) {
 #' Linearly interpolations between each subject's measurements.
 #' The input data should contain no missing values. 
 #'  
+#' @param grid Grid of unique points at which to interpolate.
 #' @param idx Unique subject index. 
 #' @param status Status, coded as 0 for censoring, 1 for event, 2 for terminal event.
 #' @param time Observation time.
 #' @param value Observation value.
-#' @param n_points Number of interpolation points.
 #' @return Data.frame.
-#' @export
-InterpolateR <- function(idx, status, time, value, n_points = 100L) {
-    .Call(`_AURMC_InterpolateR`, idx, status, time, value, n_points)
+InterpolateR <- function(grid, idx, status, time, value) {
+    .Call(`_AURMC_InterpolateR`, grid, idx, status, time, value)
 }
 

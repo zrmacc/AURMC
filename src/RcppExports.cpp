@@ -179,17 +179,17 @@ BEGIN_RCPP
 END_RCPP
 }
 // InterpolateR
-SEXP InterpolateR(const arma::colvec idx, const arma::colvec status, const arma::colvec time, const arma::colvec value, const int n_points);
-RcppExport SEXP _AURMC_InterpolateR(SEXP idxSEXP, SEXP statusSEXP, SEXP timeSEXP, SEXP valueSEXP, SEXP n_pointsSEXP) {
+SEXP InterpolateR(const arma::colvec grid, const arma::colvec idx, const arma::colvec status, const arma::colvec time, const arma::colvec value);
+RcppExport SEXP _AURMC_InterpolateR(SEXP gridSEXP, SEXP idxSEXP, SEXP statusSEXP, SEXP timeSEXP, SEXP valueSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const arma::colvec >::type grid(gridSEXP);
     Rcpp::traits::input_parameter< const arma::colvec >::type idx(idxSEXP);
     Rcpp::traits::input_parameter< const arma::colvec >::type status(statusSEXP);
     Rcpp::traits::input_parameter< const arma::colvec >::type time(timeSEXP);
     Rcpp::traits::input_parameter< const arma::colvec >::type value(valueSEXP);
-    Rcpp::traits::input_parameter< const int >::type n_points(n_pointsSEXP);
-    rcpp_result_gen = Rcpp::wrap(InterpolateR(idx, status, time, value, n_points));
+    rcpp_result_gen = Rcpp::wrap(InterpolateR(grid, idx, status, time, value));
     return rcpp_result_gen;
 END_RCPP
 }
