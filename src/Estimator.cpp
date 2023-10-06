@@ -12,7 +12,6 @@
 // @param a Value to search for.
 // @param b Vector to search.
 // @return bool.
-
 bool IsIn(const double &a, const arma::vec &b) {
   
   for(int i=0; i<b.size(); i++) {
@@ -981,7 +980,7 @@ SEXP CalcMartingaleR(
 // @param time Subject observation times.
 // @param unique_times Unique times at which to obtain the martingale.
 // @return Matrix with subjects as rows and unique times as columns.
-// [[Rcpp::export]]
+
 arma::mat CalcMartingaleCpp(
     const arma::colvec haz,
     const arma::colvec idx,

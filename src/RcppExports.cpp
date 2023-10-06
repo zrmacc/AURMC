@@ -132,21 +132,6 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
-// CalcMartingaleCpp
-arma::mat CalcMartingaleCpp(const arma::colvec haz, const arma::colvec idx, const arma::colvec status, const arma::colvec time, const arma::colvec unique_times);
-RcppExport SEXP _AURMC_CalcMartingaleCpp(SEXP hazSEXP, SEXP idxSEXP, SEXP statusSEXP, SEXP timeSEXP, SEXP unique_timesSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const arma::colvec >::type haz(hazSEXP);
-    Rcpp::traits::input_parameter< const arma::colvec >::type idx(idxSEXP);
-    Rcpp::traits::input_parameter< const arma::colvec >::type status(statusSEXP);
-    Rcpp::traits::input_parameter< const arma::colvec >::type time(timeSEXP);
-    Rcpp::traits::input_parameter< const arma::colvec >::type unique_times(unique_timesSEXP);
-    rcpp_result_gen = Rcpp::wrap(CalcMartingaleCpp(haz, idx, status, time, unique_times));
-    return rcpp_result_gen;
-END_RCPP
-}
 // InfluenceR
 SEXP InfluenceR(const arma::colvec idx, const arma::colvec status, const arma::colvec time, const double trunc_time, const arma::colvec value);
 RcppExport SEXP _AURMC_InfluenceR(SEXP idxSEXP, SEXP statusSEXP, SEXP timeSEXP, SEXP trunc_timeSEXP, SEXP valueSEXP) {
@@ -203,7 +188,6 @@ static const R_CallMethodDef CallEntries[] = {
     {"_AURMC_BootstrapSamplesR", (DL_FUNC) &_AURMC_BootstrapSamplesR, 9},
     {"_AURMC_CalcMuR", (DL_FUNC) &_AURMC_CalcMuR, 4},
     {"_AURMC_CalcMartingaleR", (DL_FUNC) &_AURMC_CalcMartingaleR, 5},
-    {"_AURMC_CalcMartingaleCpp", (DL_FUNC) &_AURMC_CalcMartingaleCpp, 5},
     {"_AURMC_InfluenceR", (DL_FUNC) &_AURMC_InfluenceR, 5},
     {"_AURMC_PerturbationR", (DL_FUNC) &_AURMC_PerturbationR, 6},
     {"_AURMC_InterpolateR", (DL_FUNC) &_AURMC_InterpolateR, 5},

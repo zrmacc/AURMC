@@ -121,10 +121,6 @@ CalcMartingaleR <- function(haz, idx, status, time, unique_times) {
     .Call(`_AURMC_CalcMartingaleR`, haz, idx, status, time, unique_times)
 }
 
-CalcMartingaleCpp <- function(haz, idx, status, time, unique_times) {
-    .Call(`_AURMC_CalcMartingaleCpp`, haz, idx, status, time, unique_times)
-}
-
 #' Influence Function R
 #' 
 #' Influence function contributions for the AUC. Includes the three component

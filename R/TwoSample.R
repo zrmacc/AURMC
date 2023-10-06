@@ -128,6 +128,11 @@ CompareAURMCs <- function(
       value = {{value_name}}
     )
   
+  # Convert index to numeric.
+  if (is.factor(data$idx)) {
+    data$idx <- as.numeric(data$idx)
+  }
+  
   # Censor after last.
   if (censor_after_last) {
     data <- CensorAfterLast(data)

@@ -3,6 +3,7 @@
 S3method(print,AURMC)
 export(AURMC)
 export(CompareAURMCs)
+export(Curve)
 export(GenData)
 export(Interpolate)
 exportClasses(AURMC)

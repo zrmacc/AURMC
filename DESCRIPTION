@@ -1,6 +1,6 @@
 Package: AURMC
 Title: Area Under the Repeated Measures Curve
-Version: 0.0.2
+Version: 0.0.3
 Authors@R: 
     person(given = "Zachary",
            family = "McCaw",

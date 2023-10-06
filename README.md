@@ -1,4 +1,3 @@
-
 # Area Under the Repeated Measures Curve
 
 Zachary R. McCaw <br> Updated: 2022-08-20

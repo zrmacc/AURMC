@@ -6,6 +6,7 @@ test_that("Test estimator.", {
     time = c(0, 0.5, 0, 1, 1.5, 0, 1, 2, 2.5),
     value = c(1, NA, 1, 1, NA, 1, 1, 1, NA)
   )
+  expect_error(InputCheck(df), NA)
   
   # Observed.
   obs <- EstimatorR(
