@@ -1,3 +1,4 @@
+
 # Area Under the Repeated Measures Curve
 
 Zachary R. McCaw <br> Updated: 2022-08-20
@@ -40,25 +41,24 @@ head(data)
 
 The columns are:
 
--   `idx`, the subject identifier.
--   `time`, the observation time.
--   `status`, coded 0 for censoring, 1 for a measurement, and 2 for a
-    terminal event (e.g. death).
--   `value`, the value of the measurement at the observation time.
+- `idx`, the subject identifier.
+- `time`, the observation time.
+- `status`, coded 0 for censoring, 1 for a measurement, and 2 for a
+  terminal event (e.g. death).
+- `value`, the value of the measurement at the observation time.
 
 Note that:
 
--   All subjects must have a baseline record at `time = 0` with
-    `status = 1`.
--   All subjects must have an **observation-terminating** event as their
-    last record, either `status = 0` for censoring or `status = 2` for a
-    terminal event.
-    -   By default, a subject with no observation-terminating event is
-        censored immediately after their last measurement.
--   If a subject’s measurement value is missing (`NA`), their last value
-    is carried forward.
-    -   If a subject’s baseline measurement is missing, it is set to
-        zero.
+- All subjects must have a baseline record at `time = 0` with
+  `status = 1`.
+- All subjects must have an **observation-terminating** event as their
+  last record, either `status = 0` for censoring or `status = 2` for a
+  terminal event.
+  - By default, a subject with no observation-terminating event is
+    censored immediately after their last measurement.
+- If a subject’s measurement value is missing (`NA`), their last value
+  is carried forward.
+  - If a subject’s baseline measurement is missing, it is set to zero.
 
 ## Interolation
 

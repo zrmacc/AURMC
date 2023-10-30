@@ -1,0 +1,168 @@
+---
+output: 
+  github_document
+--- 
+
+# Area Under the Repeated Measures Curve
+
+Zachary R. McCaw <br>
+Updated: 2022-08-20
+
+```{r global_options, include=FALSE}
+knitr::opts_chunk$set(cache = TRUE)
+```
+
+## Description
+
+This package performs inference on the area under the repeated measures curve.
+
+## Installation
+
+```{R, eval=FALSE}
+devtools::install_github(repo = 'zrmacc/AURMC')
+```
+
+## Data
+
+The function `GenData` simulates example data in the format expected by this package. 
+
+```{R}
+library(AURMC)
+set.seed(101)
+data <- AURMC::GenData(
+  censoring_rate = 0.5,
+  death_rate = 0.5,
+  n = 25,
+  tau = 4
+)
+head(data)
+```
+
+The columns are:
+
+* `idx`, the subject identifier. 
+* `time`, the observation time. 
+* `status`, coded 0 for censoring, 1 for a measurement, and 2 for a terminal event (e.g. death).
+* `value`, the value of the measurement at the observation time.
+
+Note that:
+
+* All subjects must have a baseline record at `time = 0` with `status = 1`.
+* All subjects must have an **observation-terminating** event as their last record, either `status = 0` for censoring or `status = 2` for a terminal event.
+  - By default, a subject with no observation-terminating event is censored immediately after their last measurement.
+* If a subject's measurement value is missing (`NA`), their last value is carried forward.
+  - If a subject's baseline measurement is missing, it is set to zero.
+
+## Interolation
+
+The function `InterpolateR` provides the ability to linearly interpolate measurements to obtain more precise area estimates:
+```{r}
+# Simple example data.
+data <- data.frame(
+  idx = c(1, 1, 2, 2),
+  status = c(1, 0, 1, 2),
+  time = c(0, 1, 0, 1),
+  value = c(0, 1, 0, -1)
+)
+show(data)
+```
+
+```{r}
+grid <- c(0, 0.5, 1.0)
+interpolated <- AURMC::Interpolate(
+  data = data,
+  grid = grid
+)
+show(interpolated)
+```
+
+## One-sample Problem
+
+Case where the expected area is zero:
+```{r}
+set.seed(101)
+data <- AURMC::GenData(
+  censoring_rate = 0.5,
+  death_rate = 0.5,
+  n = 25,
+  tau = 4
+)
+AURMC::AURMC(data, tau = 2.0)
+```
+
+Case where the expected area is non-zero:
+```{r}
+set.seed(101)
+data <- AURMC::GenData(
+  censoring_rate = 0.5,
+  death_rate = 0.5,
+  n = 25,
+  tau = 4,
+  value_mean = 1.0
+)
+AURMC::AURMC(data, tau = 2.0)
+```
+
+## Two-sample Problem
+
+Case of no true difference:
+```{r}
+set.seed(102)
+
+# Reference arm.
+data0 <- AURMC::GenData(
+  censoring_rate = 0.5,
+  death_rate = 0.5,
+  n = 25,
+  tau = 4,
+  value_mean = 1.0
+)
+data0$arm <- 0
+
+# Treatment arm.
+data1 <- AURMC::GenData(
+  censoring_rate = 0.5,
+  death_rate = 0.5,
+  n = 25,
+  tau = 4,
+  value_mean = 1.0
+)
+data1$arm <- 1
+data1$idx <- nrow(data0) + data1$idx
+
+# Overall data set.
+data <- rbind(data0, data1)
+
+AURMC::CompareAURMCs(data)
+```
+
+Case of a true differnece:
+```{r}
+set.seed(102)
+
+# Reference arm.
+data0 <- AURMC::GenData(
+  censoring_rate = 0.5,
+  death_rate = 0.5,
+  n = 25,
+  tau = 4,
+  value_mean = 1.0
+)
+data0$arm <- 0
+
+# Treatment arm.
+data1 <- AURMC::GenData(
+  censoring_rate = 0.5,
+  death_rate = 0.5,
+  n = 25,
+  tau = 4,
+  value_mean = 2.0
+)
+data1$arm <- 1
+data1$idx <- nrow(data0) + data1$idx
+
+# Overall data set.
+data <- rbind(data0, data1)
+
+AURMC::CompareAURMCs(data)
+```
