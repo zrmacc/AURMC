@@ -13,13 +13,7 @@
 // @param b Vector to search.
 // @return bool.
 bool IsIn(const double &a, const arma::vec &b) {
-  
-  for(int i=0; i<b.size(); i++) {
-    if(b(i) == a) {
-      return true;
-    }
-  }
-  return false;
+  return arma::any(b == a);
 }
 
 
@@ -28,18 +22,7 @@ bool IsIn(const double &a, const arma::vec &b) {
 // @param a Vector.
 // @param b Vector.
 // @return Vector.
-arma::colvec Union(const arma::colvec &a, arma::colvec b) {
-  
-  // Sets all elements of b that are in a to a value that is known
-  // to be in a. Then concatenates a and b and filters to unique values.
-  
-  double a0 = a(0);
-  for(int i=0; i<b.size(); i++) {
-    if(IsIn(b(i), a)){
-      b(i) = a0;
-    }
-  }
-
+arma::colvec Union(const arma::colvec &a, const arma::colvec &b) {
   arma::colvec out = arma::unique(arma::join_cols(a, b));
   return out;
 }
@@ -51,14 +34,20 @@ arma::colvec Union(const arma::colvec &a, arma::colvec b) {
 // @param tau Truncation time.
 // @return Truncated vector.
 arma::colvec Truncate(const arma::colvec &time, const double tau) {
-  arma::colvec unique_times = arma::unique(time);
-  for(int i=0; i<unique_times.size(); i++){
-    if(unique_times(i) > tau){
-      unique_times(i) = tau;
-    }
+  
+  // Find indices where time > tau.
+  arma::uvec indices = find(time > tau);  
+  
+  // No truncation required.
+  if (indices.is_empty()) {
+    return time;  
   }
-  arma::colvec out = arma::unique(unique_times);
-  return out;
+
+  arma::colvec truncated = time;
+  
+  // Set elements at indices to tau.
+  truncated(indices).fill(tau);  
+  return arma::unique(truncated);
 }
 
 
@@ -94,32 +83,32 @@ SEXP ValueMatrixR(
   arma::mat dmat = arma::zeros(n, n_times);
   
   // Loop over subjects.
-  for(int i=0; i<n; i++) {
+  for(int i = 0; i < n; i++) {
     
     // Current subject.
-    arma::colvec subj_times = time.elem(arma::find(idx == unique_idx(i)));
-    arma::colvec subj_values = value.elem(arma::find(idx == unique_idx(i)));
+    arma::uvec subj_indices = arma::find(idx == unique_idx(i));
+    arma::colvec subj_times = time.elem(subj_indices);
+    arma::colvec subj_values = value.elem(subj_indices);
     
     // Initialize.
     double current_value = 0;
     double next_value = 0;
 
     // Loop over evaluation times.
-    for(int j=0; j<n_times; j++) {
+    for(int j = 0; j < n_times; j++) {
 
       double current_time = eval_times(j);
 
-      if (arma::any(subj_times <= current_time)) {
-        next_value = arma::as_scalar(
-          subj_values.elem(arma::find(subj_times <= current_time, 1, "last"))
-        );
+      arma::uvec indices = arma::find(subj_times <= current_time);
+      if (!indices.is_empty()) {
+        next_value = subj_values(indices(indices.n_elem - 1));
       }
 
-      if (not std::isnan(next_value)) {
+      if (arma::is_finite(next_value)) {
         current_value = next_value;
       }
 
-      dmat(i,j) = current_value;
+      dmat(i, j) = current_value;
 
       if (arma::all(subj_times <= current_time)) {
         break;
@@ -160,32 +149,32 @@ arma::mat ValueMatrixCpp(
   arma::mat dmat = arma::zeros(n, n_times);
   
   // Loop over subjects.
-  for(int i=0; i<n; i++) {
+  for(int i = 0; i < n; i++) {
     
     // Current subject.
-    arma::colvec subj_times = time.elem(arma::find(idx == unique_idx(i)));
-    arma::colvec subj_values = value.elem(arma::find(idx == unique_idx(i)));
+    arma::uvec subj_indices = arma::find(idx == unique_idx(i));
+    arma::colvec subj_times = time.elem(subj_indices);
+    arma::colvec subj_values = value.elem(subj_indices);
     
     // Initialize.
     double current_value = 0;
     double next_value = 0;
 
     // Loop over evaluation times.
-    for(int j=0; j<n_times; j++) {
+    for(int j = 0; j < n_times; j++) {
 
       double current_time = eval_times(j);
 
-      if (arma::any(subj_times <= current_time)) {
-        next_value = arma::as_scalar(
-          subj_values.elem(arma::find(subj_times <= current_time, 1, "last"))
-        );
+      arma::uvec indices = arma::find(subj_times <= current_time);
+      if (!indices.is_empty()) {
+        next_value = subj_values(indices(indices.n_elem - 1));
       }
 
-      if (not std::isnan(next_value)) {
+      if (arma::is_finite(next_value)) {
         current_value = next_value;
       }
 
-      dmat(i,j) = current_value;
+      dmat(i, j) = current_value;
 
       if (arma::all(subj_times <= current_time)) {
         break;
@@ -236,7 +225,7 @@ SEXP AtRiskMatrixR(
     double subj_last_time = subj_times.max();
 
     // Loop over times.
-    for(int j=0; j<n_times; j++) {
+    for(int j = 0; j < n_times; j++) {
       
       double current_time = eval_times(j);
 
@@ -279,16 +268,17 @@ arma::mat AtRiskMatrixCpp(
   arma::mat y = arma::zeros(n, n_times);
   
   // Loop over subjects.
-  for(int i=0; i<n; i++) {
+  for(int i = 0; i < n; i++) {
     
     // Current subject.
-    arma::colvec subj_times = time.elem(arma::find(idx == unique_idx(i)));
+    arma::uvec subj_indices = arma::find(idx == unique_idx(i));
+    arma::colvec subj_times = time.elem(subj_indices);
     
     // Subject is at risk until time > the subject's last time.
     double subj_last_time = subj_times.max();
     
     // Loop over times.
-    for(int j=0; j<n_times; j++) {
+    for(int j = 0; j < n_times; j++) {
       
       double current_time = eval_times(j);
 
@@ -348,7 +338,7 @@ SEXP KaplanMeierR(
   // Loop over unique times.
   double current_nar = n;
 
-  for(int i=0; i<n_unique_time; i++) {
+  for(int i = 0; i < n_unique_time; i++) {
     
     double current_time = unique_times(i);
     const arma::colvec current_status = status.elem(arma::find(time == current_time));
@@ -374,7 +364,7 @@ SEXP KaplanMeierR(
   arma::colvec surv_out(n_eval_time);
 
   int pointer = 0;
-  for(int i=0; i<n_unique_time; i++) {
+  for(int i = 0; i < n_unique_time; i++) {
     
     double current_time = unique_times(i);
     if(IsIn(current_time, eval_times)) {
@@ -438,7 +428,7 @@ arma::mat KaplanMeierCpp(
   // Loop over unique times.
   double current_nar = n;
 
-  for(int i=0; i<n_unique_time; i++) {
+  for(int i = 0; i < n_unique_time; i++) {
     
     double current_time = unique_times(i);
     const arma::colvec current_status = status.elem(arma::find(time == current_time));
@@ -464,7 +454,7 @@ arma::mat KaplanMeierCpp(
   arma::colvec surv_out(n_eval_time);
 
   int pointer = 0;
-  for(int i=0; i<n_unique_time; i++) {
+  for(int i = 0; i < n_unique_time; i++) {
     
     double current_time = unique_times(i);
     if(IsIn(current_time, eval_times)) {
