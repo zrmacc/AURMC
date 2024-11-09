@@ -11,5 +11,6 @@ NULL
 
 
 #' @keywords internal
+#' @aliases AURMC-package
 "_PACKAGE"
 

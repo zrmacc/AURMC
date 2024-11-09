@@ -2,8 +2,8 @@
 % Please edit documentation in R/AURMC-package.R
 \docType{package}
 \name{AURMC-package}
-\alias{AURMC}
 \alias{AURMC-package}
+\alias{_PACKAGE}
 \title{AURMC: Area Under the Repeated Measures Curve}
 \description{
 Inference on the area under the repeated measures curve.
