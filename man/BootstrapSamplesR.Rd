@@ -11,6 +11,7 @@ BootstrapSamplesR(
   status,
   time,
   value,
+  int_method = "trapezoid",
   replace_na = FALSE,
   return_auc = FALSE,
   trunc_time = NULL
@@ -28,6 +29,8 @@ BootstrapSamplesR(
 \item{time}{Observation time.}
 
 \item{value}{Observation value.}
+
+\item{int_method}{Integration method, selected from "left", "right", "trapezoid".}
 
 \item{replace_na}{Replace NaN with zero?}
 

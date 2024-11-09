@@ -1,5 +1,5 @@
 # Purpose: Main estimation and inference function.
-# Updated: 2022-08-20
+# Updated: 2024-11-09
 
 
 #' Area Under the Repeated Measures Curve
@@ -9,6 +9,7 @@
 #' @param censor_after_last Introduce censoring after the last event *if* no
 #'   observation-terminating event is present.
 #' @param idx_name Name of column containing a unique subject index.
+#' @param int_method Integration method, selected from "left", "right", "trapezoid".
 #' @param perturbations Number of perturbations to use for bootstrap inference.
 #'   If \code{NULL}, only analytical inference is performed.
 #' @param random_state Seed to ensure perturbations are reproducible. 
@@ -19,13 +20,13 @@
 #' @param time_name Name of column containing the observation time.
 #' @param value_name Name of the column containing the measurement.
 #' @return Data.frame.
-#' @importFrom dplyr "%>%"
 #' @export
 AURMC <- function(
   data,
   alpha = 0.05,
   censor_after_last = TRUE,
   idx_name = "idx",
+  int_method = "trapezoid",
   perturbations = NULL,
   random_state = 0,
   status_name = "status",
@@ -67,6 +68,7 @@ AURMC <- function(
     status = data$status,
     time = data$time,
     value = data$value,
+    int_method = int_method,
     trunc_time = tau,
     return_auc = TRUE
   )
@@ -132,5 +134,69 @@ AURMC <- function(
     )
     out <- rbind(out, out_boot)
   }
+  return(out)
+}
+
+
+#' Tabulate the Repeated Measures Curve
+#' 
+#' @param data Data.frame.
+#' @param censor_after_last Introduce censoring after the last event *if* no
+#'   observation-terminating event is present.
+#' @param idx_name Name of column containing a unique subject index.
+#' @param status_name Name of column containing the status. Must be coded as 0
+#'   for censoring, 1 for a measurement, 2 for death. Each subject should have
+#'   an observation-terminating event, either censoring or death.
+#' @param tau Truncation time.
+#' @param time_name Name of column containing the observation time.
+#' @param value_name Name of the column containing the measurement.
+#' @return Data.frame.
+#' @export
+TabRMC <- function(
+    data,
+    censor_after_last = TRUE,
+    idx_name = "idx",
+    status_name = "status",
+    tau = NULL,
+    time_name = "time",
+    value_name = "value"
+) {
+  
+  # Format input data.
+  data <- data %>%
+    dplyr::rename(
+      idx = {{idx_name}},
+      status = {{status_name}},
+      time = {{time_name}},
+      value = {{value_name}}
+    )
+  
+  # Convert index to numeric.
+  if (is.factor(data$idx)) {
+    data$idx <- as.numeric(data$idx)
+  }
+  
+  # Censor after last.
+  if (censor_after_last) {
+    data <- CensorAfterLast(data)
+  }
+  
+  # Truncation time.
+  if (is.null(tau)) {
+    tau <- max(data$time)
+  }
+  
+  # Check input.
+  InputCheck(data, check_arm = FALSE)
+  
+  # Calculate AUC.
+  out <- EstimatorR(
+    idx = data$idx,
+    status = data$status,
+    time = data$time,
+    value = data$value,
+    trunc_time = tau,
+    return_auc = FALSE
+  )
   return(out)
 }

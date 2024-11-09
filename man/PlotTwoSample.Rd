@@ -42,6 +42,8 @@ observation-terminating event is present.}
 
 \item{eval_pts}{Evaluation points between 0 and tau.}
 
+\item{idx_name}{Name of column containing a unique subject index.}
+
 \item{show_auc}{Show area under the curve?}
 
 \item{show_nar}{Show number at risk?}

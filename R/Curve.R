@@ -1,5 +1,5 @@
 # Purpose: Plot the integrand of the AUC.
-# Updated: 2022-08-20
+# Updated: 2024-11-09
 
 
 #' Estimate Curve
@@ -14,7 +14,6 @@
 #' @param time_name Name of column containing the observation time.
 #' @param value_name Name of the column containing the measurement.
 #' @return Function.
-#' @importFrom dplyr "%>%"
 #' @export
 Curve <- function(
   data,

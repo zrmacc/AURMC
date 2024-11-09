@@ -53,13 +53,14 @@ KaplanMeierR <- function(eval_times, idx, status, time) {
 #' @param value Observation value.
 #' @param eval_times Evalulation times. If omitted, defaults to the
 #' unique values of time.
+#' @param int_method Integration method, selected from "left", "right", "trapezoid".
 #' @param replace_na Replace NaN with zero? Default: FALSE.
 #' @param return_auc Return the AUC? Default: FALSE.
 #' @param trunc_time Truncation time? Optional. If omitted, defaults
 #' to the maximum evaluation time.
 #' @return Data.frame.
-EstimatorR <- function(idx, status, time, value, eval_times = NULL, replace_na = FALSE, return_auc = FALSE, trunc_time = NULL) {
-    .Call(`_AURMC_EstimatorR`, idx, status, time, value, eval_times, replace_na, return_auc, trunc_time)
+EstimatorR <- function(idx, status, time, value, eval_times = NULL, int_method = "trapezoid", replace_na = FALSE, return_auc = FALSE, trunc_time = NULL) {
+    .Call(`_AURMC_EstimatorR`, idx, status, time, value, eval_times, int_method, replace_na, return_auc, trunc_time)
 }
 
 #' Draw Bootstrap R
@@ -85,13 +86,14 @@ DrawBootstrapR <- function(idx, status, time, value) {
 #' @param status Status, coded as 0 for censoring, 1 for event, 2 for terminal event.
 #' @param time Observation time.
 #' @param value Observation value.
+#' @param int_method Integration method, selected from "left", "right", "trapezoid".
 #' @param replace_na Replace NaN with zero?
 #' @param return_auc Return the AUC?
 #' @param trunc_time Truncation time? Optional. If omitted, defaults
 #' to the maximum evaluation time.
 #' @return Numeric matrix.
-BootstrapSamplesR <- function(boot, eval_times, idx, status, time, value, replace_na = FALSE, return_auc = FALSE, trunc_time = NULL) {
-    .Call(`_AURMC_BootstrapSamplesR`, boot, eval_times, idx, status, time, value, replace_na, return_auc, trunc_time)
+BootstrapSamplesR <- function(boot, eval_times, idx, status, time, value, int_method = "trapezoid", replace_na = FALSE, return_auc = FALSE, trunc_time = NULL) {
+    .Call(`_AURMC_BootstrapSamplesR`, boot, eval_times, idx, status, time, value, int_method, replace_na, return_auc, trunc_time)
 }
 
 #' Calculate Mu R

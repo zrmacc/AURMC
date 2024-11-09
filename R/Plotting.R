@@ -12,6 +12,7 @@
 #' @param color_labs Color labels.
 #' @param colors Colors for control and treatment respectively.
 #' @param eval_pts Evaluation points between 0 and tau.
+#' @param idx_name Name of column containing a unique subject index.
 #' @param status_name Name of column containing the status. Must be coded as 0
 #'   for censoring, 1 for a measurement, 2 for death. Each subject should have
 #'   an observation-terminating event, either censoring or death.
@@ -170,6 +171,7 @@ PlotTwoSample <- function(
     df_nar <- df %>%
       dplyr::filter(time %in% x_breaks)
     
+    nar <- NULL
     q_nar <- ggplot2::ggplot(data = df_nar) +
       ggplot2::theme_bw() + 
       ggplot2::theme(

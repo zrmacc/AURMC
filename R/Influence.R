@@ -84,3 +84,4 @@ CalcI3 <- function(d, risk_mat, surv, unique_times, y) {
   out <- do.call(c, out)
   return(out)
 }
+

@@ -1,6 +1,6 @@
 Package: AURMC
 Title: Area Under the Repeated Measures Curve
-Version: 0.0.3
+Version: 0.0.4
 Authors@R: 
     person(given = "Zachary",
            family = "McCaw",
@@ -13,15 +13,19 @@ Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.2.3
 Suggests: 
-  testthat (>= 3.0.0),
-  withr
+    knitr,
+    rmarkdown,
+    testthat (>= 3.0.0),
+    withr
 Config/testthat/edition: 3
 LinkingTo: 
     RcppArmadillo,
     Rcpp
 Imports:
+    cowplot,
     dplyr,
+    ggplot2,
     methods,
-    RcppArmadillo,
     Rcpp,
     tibble
+VignetteBuilder: knitr

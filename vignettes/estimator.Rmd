@@ -1,0 +1,98 @@
+---
+title: "AURMC Estimator"
+output: 
+  pdf_document
+vignette: >
+  %\VignetteEngine{knitr::knitr}
+  %\VignetteIndexEntry{Perturbation Bootstrap}
+  %\usepackage[UTF-8]{inputenc}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r setup}
+library(AURMC)
+```
+
+# Estimator
+
+Each patient is observed until their time of censoring $C$ or death $T$. Let $X = \min(T, C)$ denote the observation time, and $\delta = \mathbb{I}(T \leq C)$ the status indicator. While under observation, measurements are recorded for a process $\{D(t), 0 < t < \tau\}$. For example, $D(t)$ may take the value 1 while a patient is in the hospital, and 0 otherwise. Define the target estimand:
+$$
+\mu = \int_{0}^{\tau} \mathbb{E}\{D(t)\}dt,
+$$
+which is the area under the curve (AUC) up to the truncation time $\tau$. A consistent estimator for $\mu$ is given by:
+
+$$
+\begin{gathered}
+\hat{\mu} = \int_{0}^{\tau} \hat{S}(t) \frac{\bar{D}(t)}{\bar{Y}(t)}dt, \\
+\bar{D}(t) = \frac{1}{n}\sum_{i=1}^{n}D_{i}(t)\mathbb{I}(X_{i} \geq t), \\
+\bar{Y}(t) = \frac{1}{n}\sum_{i=1}^{n}\mathbb{I}(X_{i} \geq t).
+\end{gathered}
+$$
+
+Here $\hat{S}(t)$ is the Kaplan-Meier estimate of the survival probability at time $t$, $\bar{D}(t)$ is the mean value of the measurement among subjects remaining at risk, and $\bar{Y}(t)$ is the proportion of the sample remaining at risk. 
+
+## Method of integration
+
+Let $\hat{E}(t) = \hat{S}(t) \bar{D}(t) / \bar{Y}(t)$ denote the estimated value of $\mathbb{E}\{D(t)\}$ at time $t$. Partition the interval $[0, \tau)$ as:
+$$
+0 = t_{0} \leq t_{1} < \cdots < u_{K} \leq u_{K+1} = \tau,
+$$
+where $\{t_{k}: 1 \leq k \leq K\}$ are the times at which the value of $\hat{E}(t)$ changes. $\hat{\mu}$ may be calculated in several ways, all of which provide consistent estimation. The left sum is:
+$$
+\hat{\mu}_{\text{left}} = \sum_{k=1}^{K+1}\hat{E}(t_{k-1})\cdot(t_{k} - t_{k-1}).
+$$
+The right sum is:
+$$
+\hat{\mu}_{\text{right}} = \sum_{k=1}^{K + 1}\hat{E}(t_{k}) \cdot (t_{k} - t_{k-1}).
+$$
+Lastly, the trapezoidal sum is:
+$$
+\hat{\mu}_{\text{trapezoid}} = \sum_{k=1}^{K+1}\left\{\frac{\hat{E}(t_{k-1}) + \hat{E}(t_{k})}{2}\right\} \cdot (t_{k} - t_{k-1}).
+$$
+
+### Example
+
+Consider the following data for a single subject:
+```{r}
+data <- data.frame(
+  idx = c(1, 1, 1, 1, 1, 1),
+  time = c(0, 1, 2, 3, 4, 5),
+  status = c(1, 1, 1, 1, 1, 0),
+  value = c(5, 4, 3, 2, 1, 0)
+)
+show(data)
+```
+
+The value of the repeated measure curve can be tabulated as:
+```{r}
+tab <- AURMC::TabRMC(data)
+show(tab)
+```
+
+Here `nar` is the number at risk at the beginning of the interval, `y` is $\bar{Y}(t)$, `haz` is the hazard of death, `surv` is the survival probability, `d` is $\bar{D}(t)$, and `exp` is $\hat{E}(t) = \hat{S}(t) \bar{D}(t) / \bar{Y}(t)$. 
+
+\newpage
+The AUC can be calculated as:
+```{r}
+# Left sum.
+left <- AURMC::AURMC(data, int_method = "left")
+cat("Left sum:\n")
+show(left)
+
+# Right sum.
+right <- AURMC::AURMC(data, int_method = "right")
+cat("Right sum:\n")
+show(right)
+
+# Trapezoidal sum.
+right <- AURMC::AURMC(data, int_method = "trapezoid")
+cat("Trapezoidal sum:\n")
+show(right)
+```
+

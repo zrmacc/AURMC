@@ -10,6 +10,7 @@ CompareAURMCs(
   arm_name = "arm",
   censor_after_last = TRUE,
   idx_name = "idx",
+  int_method = "trapezoid",
   perturbations = NULL,
   random_state = 0,
   status_name = "status",
@@ -30,6 +31,8 @@ reference, 1 for treatment.}
 observation-terminating event is present.}
 
 \item{idx_name}{Name of column containing a unique subject index.}
+
+\item{int_method}{Integration method, selected from "left", "right", "trapezoid".}
 
 \item{perturbations}{Number of perturbations to use for bootstrap inference.
 If \code{NULL}, only analytical inference is performed.}

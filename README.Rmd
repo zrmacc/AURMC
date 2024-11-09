@@ -55,7 +55,7 @@ Note that:
 
 ## Interolation
 
-The function `InterpolateR` provides the ability to linearly interpolate measurements to obtain more precise area estimates:
+The function `InterpolateR` linearly interpolates measurements to obtain more precise area estimates:
 ```{r}
 # Simple example data.
 data <- data.frame(

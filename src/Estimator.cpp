@@ -484,6 +484,7 @@ arma::mat KaplanMeierCpp(
 //' @param value Observation value.
 //' @param eval_times Evalulation times. If omitted, defaults to the
 //' unique values of time.
+//' @param int_method Integration method, selected from "left", "right", "trapezoid".
 //' @param replace_na Replace NaN with zero? Default: FALSE.
 //' @param return_auc Return the AUC? Default: FALSE.
 //' @param trunc_time Truncation time? Optional. If omitted, defaults
@@ -497,6 +498,7 @@ SEXP EstimatorR(
   const arma::colvec time,
   const arma::colvec value,
   const Rcpp::Nullable<Rcpp::NumericVector> eval_times=R_NilValue,
+  const std::string int_method = "trapezoid",
   const bool replace_na=false,
   const bool return_auc=false,
   const Rcpp::Nullable<double> trunc_time=R_NilValue
@@ -549,9 +551,23 @@ SEXP EstimatorR(
   }
 
   if(return_auc) {
-
+    
+    // Calculate dt. 
     const arma::colvec delta_t = arma::diff(unique_times);
-    const arma::colvec integrand = exp.subvec(0, n_times - 2);
+    
+    // Integrand.
+    arma::colvec integrand;
+    if (int_method == "left") {
+      integrand = exp.subvec(0, n_times - 2);
+    } else if (int_method == "right") {
+      integrand = exp.subvec(1, n_times - 1);
+    } else if (int_method == "trapezoid") {
+      integrand =  0.5 * (exp.subvec(0, n_times - 2) + exp.subvec(1, n_times - 1));
+    } else {
+      throw std::invalid_argument("Invalid integration method");
+    }
+
+    // AURMC.
     double auc = arma::sum(integrand % delta_t);
     return Rcpp::wrap(auc);
 
@@ -583,6 +599,7 @@ SEXP EstimatorR(
 // @param status Status, coded as 0 for censoring, 1 for event, 2 for terminal event.
 // @param time Observation time.
 // @param value Observation value.
+// @param int_method Integration method, selected from "left", "right", "trapezoid".
 // @param replace_na Replace NaN with zero?
 // @param return_auc Return the AUC?
 // @return Numeric vector.
@@ -594,6 +611,7 @@ arma::mat EstimatorCpp(
   const arma::colvec time,
   const double trunc_time,
   const arma::colvec value,
+  const std::string int_method = "trapezoid",
   const bool replace_na=false,
   const bool return_auc=false
 ){
@@ -629,8 +647,22 @@ arma::mat EstimatorCpp(
 
   if(return_auc) {
 
+    // Calculate dt. 
     const arma::colvec delta_t = arma::diff(eval_times);
-    const arma::colvec integrand = exp.subvec(0, n_times - 2);
+
+    // Integrand.
+    arma::colvec integrand;
+    if (int_method == "left") {
+      integrand = exp.subvec(0, n_times - 2);
+    } else if (int_method == "right") {
+      integrand = exp.subvec(1, n_times - 1);
+    } else if (int_method == "trapezoid") {
+      integrand =  0.5 * (exp.subvec(0, n_times - 2) + exp.subvec(1, n_times - 1));
+    } else {
+      throw std::invalid_argument("Invalid integration method");
+    }
+
+    // AURMC.
     double auc = arma::sum(integrand % delta_t);
     arma::mat out(1, 1);
     out(0, 0) = auc;
@@ -746,6 +778,7 @@ arma::mat DrawBootstrapCpp(
 //' @param status Status, coded as 0 for censoring, 1 for event, 2 for terminal event.
 //' @param time Observation time.
 //' @param value Observation value.
+//' @param int_method Integration method, selected from "left", "right", "trapezoid".
 //' @param replace_na Replace NaN with zero?
 //' @param return_auc Return the AUC?
 //' @param trunc_time Truncation time? Optional. If omitted, defaults
@@ -760,6 +793,7 @@ SEXP BootstrapSamplesR(
   const arma::colvec status,
   const arma::colvec time,
   const arma::colvec value,
+  const std::string int_method = "trapezoid",
   const bool replace_na=false,
   const bool return_auc=false,
   const Rcpp::Nullable<double> trunc_time=R_NilValue
@@ -800,6 +834,7 @@ SEXP BootstrapSamplesR(
       boot_time,
       tau,
       boot_value,
+      int_method,
       replace_na, 
       return_auc
     );

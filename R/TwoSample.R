@@ -1,5 +1,5 @@
 # Purpose: Main estimation and inference function.
-# Updated: 2022-08-20
+# Updated: 2024-11-09
 
 
 #' Difference
@@ -91,6 +91,7 @@ DiffRatio <- function(arm0, arm1, alpha = 0.05) {
 #' @param censor_after_last Introduce censoring after the last event *if* no
 #'   observation-terminating event is present.
 #' @param idx_name Name of column containing a unique subject index.
+#' @param int_method Integration method, selected from "left", "right", "trapezoid".
 #' @param perturbations Number of perturbations to use for bootstrap inference.
 #'   If \code{NULL}, only analytical inference is performed.
 #' @param random_state Seed to ensure perturbations are reproducible. 
@@ -101,7 +102,6 @@ DiffRatio <- function(arm0, arm1, alpha = 0.05) {
 #' @param time_name Name of column containing the observation time.
 #' @param value_name Name of the column containing the measurement.
 #' @return Data.frame.
-#' @importFrom dplyr "%>%"
 #' @export
 CompareAURMCs <- function(
   data,
@@ -109,6 +109,7 @@ CompareAURMCs <- function(
   arm_name = "arm",
   censor_after_last = TRUE,
   idx_name = "idx",
+  int_method = "trapezoid",
   perturbations = NULL,
   random_state = 0,
   status_name = "status",
@@ -151,6 +152,7 @@ CompareAURMCs <- function(
     data = data %>% dplyr::filter(arm == 0),
     alpha = alpha,
     censor_after_last = censor_after_last,
+    int_method = int_method,
     perturbations = perturbations,
     random_state = random_state,
     tau = tau
@@ -162,6 +164,7 @@ CompareAURMCs <- function(
     data = data %>% dplyr::filter(arm == 1),
     alpha = alpha,
     censor_after_last = censor_after_last,
+    int_method = int_method,
     perturbations = perturbations,
     random_state = random_state,
     tau = tau

@@ -1,5 +1,5 @@
 # Purpose: Simulate data.
-# Updated: 2022-08-06
+# Updated: 2024-11-09
 
 
 #' Simulate Subject
@@ -60,8 +60,10 @@ SimSubj <- function(
 }
 
 
-
 #' Simulate Repeated Measures Data
+#' 
+#' Simulates repeated measures data at regular time points subject to
+#' exponential censoring and death.
 #' 
 #' @param censoring_rate Rate for the time to death.
 #' @param death_rate Rate for the time to death.
@@ -98,5 +100,4 @@ GenData <- function(
   out <- do.call(rbind, data)
   return(out)
 }
-
 

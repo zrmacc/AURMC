@@ -35,3 +35,30 @@ test_that("Test estimator.", {
   expect_equal(obs, 1.25)
   
 })
+
+
+test_that("Test integration method.", {
+  
+  df <- data.frame(
+    idx = c(1, 1, 1, 1, 1, 1),
+    time = c(0, 1, 2, 3, 4, 5),
+    status = c(1, 1, 1, 1, 1, 0),
+    value = c(5, 4, 3, 2, 1, 0)
+  )
+  
+  # Left sum.
+  obs <- AURMC(df, int_method = "left")
+  exp <- 5 + 4 + 3 + 2 + 1
+  expect_equal(obs$auc[1], exp)
+  
+  # Right sum.
+  obs <- AURMC(df, int_method = "right")
+  exp <- 4 + 3 + 2 + 1 + 0
+  expect_equal(obs$auc[1], exp)
+  
+  # Trapezoidal sum.
+  obs <- AURMC(df, int_method = "trapezoid")
+  exp <- 0.5 * (5 + 2 * 4 + 2 * 3 + 2 * 2 + 2 * 1 + 0)
+  expect_equal(obs$auc[1], exp)
+  
+})

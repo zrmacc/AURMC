@@ -33,5 +33,6 @@ GenData(
 Data.frame.
 }
 \description{
-Simulate Repeated Measures Data
+Simulates repeated measures data at regular time points subject to
+exponential censoring and death.
 }

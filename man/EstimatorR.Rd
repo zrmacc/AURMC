@@ -10,6 +10,7 @@ EstimatorR(
   time,
   value,
   eval_times = NULL,
+  int_method = "trapezoid",
   replace_na = FALSE,
   return_auc = FALSE,
   trunc_time = NULL
@@ -26,6 +27,8 @@ EstimatorR(
 
 \item{eval_times}{Evalulation times. If omitted, defaults to the
 unique values of time.}
+
+\item{int_method}{Integration method, selected from "left", "right", "trapezoid".}
 
 \item{replace_na}{Replace NaN with zero? Default: FALSE.}
 
