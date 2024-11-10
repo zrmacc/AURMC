@@ -3,7 +3,7 @@ title: "AURMC Estimator"
 output: 
   pdf_document
 vignette: >
-  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEngine{knitr::knitr}
   %\VignetteIndexEntry{Estimator}
   %\usepackage[UTF-8]{inputenc}
 ---
