@@ -1,7 +1,9 @@
 
 # Area Under the Repeated Measures Curve
 
-Zachary R. McCaw <br> Updated: 2022-08-20
+[![R-CMD-check](https://github.com/zrmacc/AURMC/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/zrmacc/AURMC/actions/workflows/R-CMD-check.yaml)
+
+Zachary R. McCaw <br> Updated: 2024-11-09
 
 ## Description
 
@@ -62,8 +64,8 @@ Note that:
 
 ## Interolation
 
-The function `InterpolateR` provides the ability to linearly interpolate
-measurements to obtain more precise area estimates:
+The function `InterpolateR` linearly interpolates measurements to obtain
+more precise area estimates:
 
 ``` r
 # Simple example data.
