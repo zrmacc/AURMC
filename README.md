@@ -1,6 +1,11 @@
 
 # Area Under the Repeated Measures Curve
 
+<!-- badges: start -->
+
+[![R-CMD-check](https://github.com/zrmacc/AURMC/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/zrmacc/AURMC/actions/workflows/R-CMD-check.yaml)
+<!-- badges: end -->
+
 Zachary R. McCaw <br> Updated: 2024-11-09
 
 ## Description

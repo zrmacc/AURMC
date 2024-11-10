@@ -301,12 +301,10 @@ arma::mat AtRiskMatrixCpp(
 //' Tabulate Kaplan Meier R
 //'
 //' Constructs a matrix with evaluation times as rows, and 4 columns:
-//' \itemize{
-//' \item{time}{Evaluation times.}
-//' \item{nar}{Number at risk.}
-//' \item{surv}{Survival probability.}
-//' \item{haz}{Hazard.}
-//' }
+//' * time Evaluation times.
+//' * nar Number at risk.
+//' * surv Survival probability.
+//' * haz Hazard.
 //'  
 //' @param eval_times Evaluation times.
 //' @param idx Unique subject index.
@@ -392,12 +390,10 @@ SEXP KaplanMeierR(
 // Tabulate Kaplan Meier Cpp
 //  
 // Constructs a matrix with evaluation times as rows, and 4 columns:
-// \itemize{
-// \item{time}{Evaluation times.}
-// \item{nar}{Number at risk.}
-// \item{surv}{Survival probability.}
-// \item{haz}{Hazard.}
-// }
+// * time Evaluation times.
+// * nar Number at risk.
+// * surv Survival probability.
+// * haz Hazard.
 //
 // @param eval_times Evaluation times.
 // @param idx Unique subject index.
