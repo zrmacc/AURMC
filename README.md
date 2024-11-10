@@ -65,7 +65,7 @@ Note that:
   is carried forward.
   - If a subject’s baseline measurement is missing, it is set to zero.
 
-## Interolation
+## Interpolation
 
 The function `InterpolateR` linearly interpolates measurements to obtain
 more precise area estimates:
