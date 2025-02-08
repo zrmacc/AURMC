@@ -6,7 +6,7 @@
 [![R-CMD-check](https://github.com/zrmacc/AURMC/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/zrmacc/AURMC/actions/workflows/R-CMD-check.yaml)
 <!-- badges: end -->
 
-Zachary R. McCaw <br> Updated: 2024-11-09
+Zachary R. McCaw <br> Updated: 2025-02-07
 
 ## Description
 
@@ -51,6 +51,7 @@ The columns are:
 - `status`, coded 0 for censoring, 1 for a measurement, and 2 for a
   terminal event (e.g. death).
 - `value`, the value of the measurement at the observation time.
+  - The value may be continuous (as in this example) or binary.
 
 Note that:
 
@@ -67,8 +68,10 @@ Note that:
 
 ## Interpolation
 
-The function `InterpolateR` linearly interpolates measurements to obtain
-more precise area estimates:
+The function `InterpolateR` *optionally* performs linear interpolation
+between measurements to enable more precise area estimation. This step
+can be skipped if interpolation is not meaningful for the outcome of
+interest, for example the value remains constant between observations.
 
 ``` r
 # Simple example data.

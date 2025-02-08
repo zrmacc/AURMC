@@ -8,6 +8,13 @@
 \description{
 Inference on the area under the repeated measures curve.
 }
+\seealso{
+Useful links:
+\itemize{
+  \item \url{https://github.com/zrmacc/AURMC}
+}
+
+}
 \author{
 \strong{Maintainer}: Zachary McCaw \email{zmccaw@alumni.harvard.edu} (\href{https://orcid.org/0000-0002-2006-9828}{ORCID})
 

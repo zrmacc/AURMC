@@ -21,9 +21,9 @@ Data.frame.
 \description{
 Constructs a matrix with evaluation times as rows, and 4 columns:
 \itemize{
-\item{time}{Evaluation times.}
-\item{nar}{Number at risk.}
-\item{surv}{Survival probability.}
-\item{haz}{Hazard.}
+\item time Evaluation times.
+\item nar Number at risk.
+\item surv Survival probability.
+\item haz Hazard.
 }
 }
