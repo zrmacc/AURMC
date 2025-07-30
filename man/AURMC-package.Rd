@@ -3,7 +3,6 @@
 \docType{package}
 \name{AURMC-package}
 \alias{AURMC-package}
-\alias{_PACKAGE}
 \title{AURMC: Area Under the Repeated Measures Curve}
 \description{
 Inference on the area under the repeated measures curve.

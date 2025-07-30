@@ -6,7 +6,7 @@
 [![R-CMD-check](https://github.com/zrmacc/AURMC/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/zrmacc/AURMC/actions/workflows/R-CMD-check.yaml)
 <!-- badges: end -->
 
-Zachary R. McCaw <br> Updated: 2025-02-07
+Zachary R. McCaw <br> Updated: 2025-07-30
 
 ## Description
 
@@ -18,6 +18,10 @@ curve.
 ``` r
 devtools::install_github(repo = 'zrmacc/AURMC')
 ```
+
+## Methodological details
+
+See the [Supplemental Proofs](docs/supplemental-proofs.pdf).
 
 ## Data
 

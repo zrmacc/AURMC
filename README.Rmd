@@ -10,7 +10,7 @@ output:
 <!-- badges: end -->
 
 Zachary R. McCaw <br>
-Updated: 2025-02-07
+Updated: 2025-07-30
 
 ```{r global_options, include=FALSE}
 knitr::opts_chunk$set(cache = TRUE)
@@ -25,6 +25,10 @@ This package performs inference on the area under the repeated measures curve.
 ```{R, eval=FALSE}
 devtools::install_github(repo = 'zrmacc/AURMC')
 ```
+
+## Methodological details
+
+See the [Supplemental Proofs](docs/supplemental-proofs.pdf).
 
 ## Data
 
