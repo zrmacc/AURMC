@@ -1,5 +1,10 @@
 ^RMAUC\.Rproj$
 ^\.Rproj\.user$
+^\.git$
+^\.Rcheck$
+^src/.*\.(o|so)$
 LICENSE.md
 README
 README.md
+^\.github$
+^docs/

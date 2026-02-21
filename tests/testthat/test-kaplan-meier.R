@@ -1,4 +1,4 @@
-test_that("Test value tabulation.", {
+test_that("Test Kaplan-Meier tabulation.", {
 
   df <- data.frame(
     idx = c(1, 2, 3, 4),

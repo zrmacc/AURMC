@@ -25,7 +25,7 @@ EstimatorR(
 
 \item{value}{Observation value.}
 
-\item{eval_times}{Evalulation times. If omitted, defaults to the
+\item{eval_times}{Evaluation times. If omitted, defaults to the
 unique values of time.}
 
 \item{int_method}{Integration method, selected from "left", "right", "trapezoid".}

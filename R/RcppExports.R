@@ -49,7 +49,7 @@ KaplanMeierR <- function(eval_times, idx, status, time) {
 #' @param status Status, coded as 0 for censoring, 1 for event, 2 for terminal event.
 #' @param time Observation time.
 #' @param value Observation value.
-#' @param eval_times Evalulation times. If omitted, defaults to the
+#' @param eval_times Evaluation times. If omitted, defaults to the
 #' unique values of time.
 #' @param int_method Integration method, selected from "left", "right", "trapezoid".
 #' @param replace_na Replace NaN with zero? Default: FALSE.

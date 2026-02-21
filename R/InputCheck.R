@@ -12,11 +12,10 @@
 CheckSubj <- function(idx, status, time) {
   
   idx <- unique(idx)
-  has_time_zero <- (time[1] == 0)
-  time_zero_status <- (status[1] == 1)
+  has_baseline <- any(time == 0 & status == 1)
   failed <- FALSE
-  
-  if (!has_time_zero | !time_zero_status) {
+
+  if (!has_baseline) {
     failed <- TRUE
     warning(paste0("Subject ", idx, " lacks a record with time = 0 and status = 1."))
   }

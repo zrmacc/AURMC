@@ -29,7 +29,7 @@ test_that("Calculation of mu.", {
   exp <- CalcMu(
     d = est$d,
     surv = est$surv,
-    unique_time = est$time,
+    unique_times = est$time,
     y = est$y
   )
   expect_equal(obs, exp)

@@ -4,7 +4,7 @@
 
 #' Simulate Subject
 #' 
-#' @param censoring_rate Rate for the time to death.
+#' @param censoring_rate Rate for the time to censoring.
 #' @param death_rate Rate for the time to death.
 #' @param idx Subject index.
 #' @param tau Truncation time.

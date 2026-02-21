@@ -1,5 +1,6 @@
 // [[Rcpp::depends(RcppArmadillo)]]
 #include <RcppArmadillo.h>
+#include <cmath>
 
 // For debugging: Rcpp::Rcout << << std::endl; 
 
@@ -104,7 +105,7 @@ SEXP ValueMatrixR(
         next_value = subj_values(indices(indices.n_elem - 1));
       }
 
-      if (arma::is_finite(next_value)) {
+      if (std::isfinite(next_value)) {
         current_value = next_value;
       }
 
@@ -170,7 +171,7 @@ arma::mat ValueMatrixCpp(
         next_value = subj_values(indices(indices.n_elem - 1));
       }
 
-      if (arma::is_finite(next_value)) {
+      if (std::isfinite(next_value)) {
         current_value = next_value;
       }
 
@@ -478,7 +479,7 @@ arma::mat KaplanMeierCpp(
 //' @param status Status, coded as 0 for censoring, 1 for event, 2 for terminal event.
 //' @param time Observation time.
 //' @param value Observation value.
-//' @param eval_times Evalulation times. If omitted, defaults to the
+//' @param eval_times Evaluation times. If omitted, defaults to the
 //' unique values of time.
 //' @param int_method Integration method, selected from "left", "right", "trapezoid".
 //' @param replace_na Replace NaN with zero? Default: FALSE.
@@ -1233,9 +1234,9 @@ SEXP InfluenceR(
   const arma::colvec i3 = CalcI3Cpp(d, risk_mat, surv, unique_times, y);
   // Rcpp::Rcout << i3 << std::endl; 
   
-  // Overall influence funciton.
+  // Overall influence function.
   const arma::colvec psi = i1 + i2 + i3;
-  
+
   // Output.
   return Rcpp::DataFrame::create(
     Rcpp::Named("idx")=unique_idx,
@@ -1313,9 +1314,9 @@ arma::colvec InfluenceCpp(
   const arma::colvec i3 = CalcI3Cpp(d, risk_mat, surv, unique_times, y);
   // Rcpp::Rcout << i3 << std::endl; 
   
-  // Overall influence funciton.
+  // Overall influence function.
   const arma::colvec psi = i1 + i2 + i3;
-  
+
   // Output.
   return psi;
 }
