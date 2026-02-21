@@ -1,0 +1,4 @@
+# macOS: use Accelerate (or R's LAPACK/BLAS); no Fortran runtime needed.
+# Omitting FLIBS avoids linker failure when gfortran is not installed.
+PKG_CXXFLAGS = $(SHLIB_OPENMP_CXXFLAGS)
+PKG_LIBS = $(SHLIB_OPENMP_CXXFLAGS) $(LAPACK_LIBS) $(BLAS_LIBS)
