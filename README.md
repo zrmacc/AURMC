@@ -10,8 +10,21 @@ Zachary R. McCaw <br> Updated: 2026-10-06
 
 ## Description
 
-This package estimates and compares areas under repeated-measures curves
-in the presence of censoring and terminal events.
+AURMC analyzes outcomes measured repeatedly across time when follow-up
+may be censored or end prematurely because of a terminal event such as
+death. It summarizes each group’s outcome experience via the area under
+its repeated-measures curve, capturing both the magnitude and duration
+of the outcome. This approach is useful when cumulative experience is
+more meaningful than the outcome at one time point. Examples may include
+days alive and out of hospital in heart failure, cumulative glycemic
+exposure based on serial blood glucose or HbA1c measurements in
+diabetes, and time alive in tumor response based on response status at
+successive oncology assessments. For methodological details and an
+application to days alive and out of hospital, see McCaw ZR, et
+al. (2026), [“Using Days Alive and Out of Hospital as the Study Endpoint
+in Cardiovascular Heart Failure Clinical
+Trials”](https://doi.org/10.1016/j.jchf.2026.103013), *JACC: Heart
+Failure*, 14(7):103013.
 
 ## Installation
 

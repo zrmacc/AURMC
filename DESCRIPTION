@@ -12,6 +12,10 @@ Description: Estimates and compares areas under curves formed by repeatedly
     Implements Kaplan-Meier adjustment for censoring, influence-function
     standard errors, Wald inference, and multiplier perturbation inference,
     with utilities for interpolation, simulation, tabulation, and plotting.
+    For additional details, see: McCaw ZR, Armbruster S, Tian L, Claggett BL,
+    Fitzmaurice G, Foà A, Pfeffer MA, Wei LJ: "Using Days Alive and Out of
+    Hospital as the Study Endpoint in Cardiovascular Heart Failure Clinical
+    Trials" <doi:10.1016/j.jchf.2026.103013>.
 License: GPL-3
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
