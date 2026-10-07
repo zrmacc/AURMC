@@ -17,6 +17,22 @@ test_that("CompareAURMCs returns AURMC object with expected slots.", {
   expect_true("arm" %in% names(out@Arm0))
   expect_true("arm" %in% names(out@Arm1))
   expect_true(all(c("stat", "est", "lower", "upper", "p") %in% names(out@Contrast)))
+  expect_equal(unique(out@Arm0$tau), 1)
+  expect_equal(unique(out@Arm1$tau), 1)
+})
+
+test_that("ratio inference is unavailable for non-positive arm areas.", {
+  df <- data.frame(
+    idx = rep(1:4, each = 2),
+    arm = rep(c(0, 0, 1, 1), each = 2),
+    time = rep(c(0, 1), 4),
+    status = rep(c(1, 0), 4),
+    value = rep(c(-1, -1, 1, 1), each = 2)
+  )
+  out <- CompareAURMCs(df)
+  ratio <- out@Contrast[out@Contrast$stat == "A1/A0", ]
+  expect_true(is.na(ratio$se))
+  expect_true(is.na(ratio$p))
 })
 
 test_that("CompareAURMCs contrast includes difference and ratio.", {

@@ -5,12 +5,13 @@
 \alias{AURMC-package}
 \title{AURMC: Area Under the Repeated Measures Curve}
 \description{
-Inference on the area under the repeated measures curve.
+Estimates and compares areas under curves formed by repeatedly measured outcomes observed subject to censoring and a terminal event. Implements Kaplan-Meier adjustment for censoring, influence-function standard errors, Wald inference, and multiplier perturbation inference, with utilities for interpolation, simulation, tabulation, and plotting.
 }
 \seealso{
 Useful links:
 \itemize{
   \item \url{https://github.com/zrmacc/AURMC}
+  \item Report bugs at \url{https://github.com/zrmacc/AURMC/issues}
 }
 
 }

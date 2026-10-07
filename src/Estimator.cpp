@@ -52,6 +52,39 @@ arma::colvec Truncate(const arma::colvec &time, const double tau) {
 }
 
 
+// Integration weights
+//
+// Return the coefficient applied to the curve value at each grid point for a
+// left, right, or trapezoidal sum.
+arma::colvec IntegrationWeights(
+    const arma::colvec &time,
+    const std::string &int_method
+) {
+  const int n_time = time.size();
+  if (n_time < 2) {
+    throw std::invalid_argument("At least two distinct time points are required");
+  }
+
+  const arma::colvec delta_t = arma::diff(time);
+  if (arma::any(delta_t <= 0)) {
+    throw std::invalid_argument("Evaluation times must be strictly increasing");
+  }
+
+  arma::colvec weights = arma::zeros(n_time);
+  if (int_method == "left") {
+    weights.subvec(0, n_time - 2) = delta_t;
+  } else if (int_method == "right") {
+    weights.subvec(1, n_time - 1) = delta_t;
+  } else if (int_method == "trapezoid") {
+    weights.subvec(0, n_time - 2) += 0.5 * delta_t;
+    weights.subvec(1, n_time - 1) += 0.5 * delta_t;
+  } else {
+    throw std::invalid_argument("Invalid integration method");
+  }
+  return weights;
+}
+
+
 // ----------------------------------------------------------------------------
 // Value matrix.
 // ----------------------------------------------------------------------------
@@ -304,12 +337,12 @@ arma::mat AtRiskMatrixCpp(
 //' Constructs a matrix with evaluation times as rows, and 4 columns:
 //' * time Evaluation times.
 //' * nar Number at risk.
-//' * surv Survival probability.
+//' * surv Left-limit survival probability, \eqn{\hat S(t-)}.
 //' * haz Hazard.
 //'  
 //' @param eval_times Evaluation times.
 //' @param idx Unique subject index.
-//' @param status Status, coded as 0 for censoring, 1 for event, 2 for terminal event.
+//' @param status Status, coded as 0 for censoring, 1 for a measurement, 2 for a terminal event.
 //' @param time Observation time.
 //' @return Data.frame.
 // [[Rcpp::export]]
@@ -353,8 +386,13 @@ SEXP KaplanMeierR(
   // Hazard.
   const arma::colvec haz = death / nar;
   
-  // Survival probability.
-  arma::colvec surv = arma::cumprod(1 - haz);
+  // Left-limit survival probability. At time t_j this product contains only
+  // hazard increments at times strictly before t_j.
+  const arma::colvec surv_after = arma::cumprod(1 - haz);
+  arma::colvec surv = arma::ones(n_unique_time);
+  if(n_unique_time > 1) {
+    surv.tail(n_unique_time - 1) = surv_after.head(n_unique_time - 1);
+  }
   
   // Restrict to evaluation times.
   const int n_eval_time = eval_times.size();
@@ -393,12 +431,12 @@ SEXP KaplanMeierR(
 // Constructs a matrix with evaluation times as rows, and 4 columns:
 // * time Evaluation times.
 // * nar Number at risk.
-// * surv Survival probability.
+// * surv Left-limit survival probability, S(t-).
 // * haz Hazard.
 //
 // @param eval_times Evaluation times.
 // @param idx Unique subject index.
-// @param status Status, coded as 0 for censoring, 1 for event, 2 for terminal event.
+// @param status Status, coded as 0 for censoring, 1 for a measurement, 2 for a terminal event.
 // @param time Observation time.
 // @return Numeric matrix.
 
@@ -441,8 +479,13 @@ arma::mat KaplanMeierCpp(
   // Hazard.
   const arma::colvec haz = death / nar;
   
-  // Survival probability.
-  arma::colvec surv = arma::cumprod(1 - haz);
+  // Left-limit survival probability. At time t_j this product contains only
+  // hazard increments at times strictly before t_j.
+  const arma::colvec surv_after = arma::cumprod(1 - haz);
+  arma::colvec surv = arma::ones(n_unique_time);
+  if(n_unique_time > 1) {
+    surv.tail(n_unique_time - 1) = surv_after.head(n_unique_time - 1);
+  }
   
   // Restrict to evaluation times.
   const int n_eval_time = eval_times.size();
@@ -476,7 +519,7 @@ arma::mat KaplanMeierCpp(
 //' Tabulate Estimator R
 //'  
 //' @param idx Unique subject index. 
-//' @param status Status, coded as 0 for censoring, 1 for event, 2 for terminal event.
+//' @param status Status, coded as 0 for censoring, 1 for a measurement, 2 for a terminal event.
 //' @param time Observation time.
 //' @param value Observation value.
 //' @param eval_times Evaluation times. If omitted, defaults to the
@@ -520,8 +563,6 @@ SEXP EstimatorR(
     double tau = Rcpp::as<double>(trunc_time);
     unique_times = Truncate(unique_times, tau);
   } 
-  const int n_times = unique_times.size();
-
   // Tabulate D_{i}(t).
   arma::mat value_mat = ValueMatrixCpp(unique_times, idx, time, value);
 
@@ -548,24 +589,8 @@ SEXP EstimatorR(
   }
 
   if(return_auc) {
-    
-    // Calculate dt. 
-    const arma::colvec delta_t = arma::diff(unique_times);
-    
-    // Integrand.
-    arma::colvec integrand;
-    if (int_method == "left") {
-      integrand = exp.subvec(0, n_times - 2);
-    } else if (int_method == "right") {
-      integrand = exp.subvec(1, n_times - 1);
-    } else if (int_method == "trapezoid") {
-      integrand =  0.5 * (exp.subvec(0, n_times - 2) + exp.subvec(1, n_times - 1));
-    } else {
-      throw std::invalid_argument("Invalid integration method");
-    }
-
-    // AURMC.
-    double auc = arma::sum(integrand % delta_t);
+    const arma::colvec weights = IntegrationWeights(unique_times, int_method);
+    double auc = arma::sum(weights % exp);
     return Rcpp::wrap(auc);
 
   }
@@ -593,7 +618,7 @@ SEXP EstimatorR(
 //  
 // @param eval_times Evaluation times.
 // @param idx Unique subject index. 
-// @param status Status, coded as 0 for censoring, 1 for event, 2 for terminal event.
+// @param status Status, coded as 0 for censoring, 1 for a measurement, 2 for a terminal event.
 // @param time Observation time.
 // @param value Observation value.
 // @param int_method Integration method, selected from "left", "right", "trapezoid".
@@ -619,8 +644,6 @@ arma::mat EstimatorCpp(
   
   // Evaluation times.
   eval_times = Truncate(eval_times, trunc_time);
-  const int n_times = eval_times.size();
-
   // Tabulate D_{i}(t).
   arma::mat value_mat = ValueMatrixCpp(eval_times, idx, time, value);
 
@@ -643,24 +666,8 @@ arma::mat EstimatorCpp(
   }
 
   if(return_auc) {
-
-    // Calculate dt. 
-    const arma::colvec delta_t = arma::diff(eval_times);
-
-    // Integrand.
-    arma::colvec integrand;
-    if (int_method == "left") {
-      integrand = exp.subvec(0, n_times - 2);
-    } else if (int_method == "right") {
-      integrand = exp.subvec(1, n_times - 1);
-    } else if (int_method == "trapezoid") {
-      integrand =  0.5 * (exp.subvec(0, n_times - 2) + exp.subvec(1, n_times - 1));
-    } else {
-      throw std::invalid_argument("Invalid integration method");
-    }
-
-    // AURMC.
-    double auc = arma::sum(integrand % delta_t);
+    const arma::colvec weights = IntegrationWeights(eval_times, int_method);
+    double auc = arma::sum(weights % exp);
     arma::mat out(1, 1);
     out(0, 0) = auc;
     return out;
@@ -682,7 +689,7 @@ arma::mat EstimatorCpp(
 //' Draw Bootstrap R
 //'  
 //' @param idx Unique subject index. 
-//' @param status Status, coded as 0 for censoring, 1 for event, 2 for terminal event.
+//' @param status Status, coded as 0 for censoring, 1 for a measurement, 2 for a terminal event.
 //' @param time Observation time.
 //' @param value Observation value.
 //' @return Numeric matrix.
@@ -724,7 +731,7 @@ SEXP DrawBootstrapR(
 // Draw Bootstrap Cpp
 //  
 // @param idx Unique subject index. 
-// @param status Status, coded as 0 for censoring, 1 for event, 2 for terminal event.
+// @param status Status, coded as 0 for censoring, 1 for a measurement, 2 for a terminal event.
 // @param time Observation time.
 // @param value Observation value.
 // @return Numeric matrix.
@@ -772,7 +779,7 @@ arma::mat DrawBootstrapCpp(
 //' @param boot Bootstrap replicates.
 //' @param eval_times Evaluation times.
 //' @param idx Unique subject index. 
-//' @param status Status, coded as 0 for censoring, 1 for event, 2 for terminal event.
+//' @param status Status, coded as 0 for censoring, 1 for a measurement, 2 for a terminal event.
 //' @param time Observation time.
 //' @param value Observation value.
 //' @param int_method Integration method, selected from "left", "right", "trapezoid".
@@ -854,65 +861,75 @@ SEXP BootstrapSamplesR(
 
 //' Calculate Mu R
 //'
-//' Evaluate \eqn{\mu(t; \tau) = \int_{t}^{\tau}{S(u)d(u)/y(u)}du}.
+//' Evaluate the quadrature tail associated with
+//' \eqn{\mu(t; \tau) = \int_{t}^{\tau}{S(u-)d(u)/y(u)}du}.
+//' The current grid point is excluded because the hazard jump at \eqn{t}
+//' affects \eqn{\hat S(u-)} only for \eqn{u > t}.
 //' 
 //' @param d Value of d(t) at each time point.
-//' @param surv Value of S(t) at each time point.
+//' @param surv Value of \eqn{S(t-)} at each time point.
 //' @param unique_times Unique values of time t.
 //' @param y Value of y(t) at each time point.
+//' @param int_method Integration method, selected from "left", "right", "trapezoid".
 //' @return Numeric vector of \eqn{\mu(t; tau)}.
 // [[Rcpp::export]]
 SEXP CalcMuR(
   const arma::colvec d,
   const arma::colvec surv,
   const arma::colvec unique_times,
-  const arma::colvec y
+  const arma::colvec y,
+  const std::string int_method = "trapezoid"
 ) {
-  
-  // Calculate dt.
-  const int n_time = unique_times.size();
-  arma::colvec delta_t = arma::zeros(n_time);
-  delta_t.subvec(1, n_time - 1) = arma::diff(unique_times);
-
-  // Calculate S(t)d(t) / y(t).
+  const arma::colvec weights = IntegrationWeights(unique_times, int_method);
   arma::colvec integrand = surv % (d / y);
   
-  // Integrate.
-  arma::colvec out = arma::reverse(
-    arma::cumsum(arma::reverse(delta_t % integrand))
+  // Inclusive tail of the quadrature integrand.
+  const arma::colvec inclusive_tail = arma::reverse(
+    arma::cumsum(arma::reverse(weights % integrand))
   );
+
+  // A hazard jump at grid point j changes left-limit survival only at later
+  // grid points. Therefore the influence tail is strictly after j.
+  arma::colvec out = arma::zeros(unique_times.size());
+  if(unique_times.size() > 1) {
+    out.head(unique_times.size() - 1) = inclusive_tail.tail(unique_times.size() - 1);
+  }
   return Rcpp::wrap(out);
 }
 
 
 // Calculate Mu Cpp
 //
-// Evaluate \eqn{\mu(t; \tau) = \int_{t}^{\tau}{S(u)d(u)/y(u)}du}.
+// Evaluate the quadrature tail associated with
+// mu(t; tau) = integral_t^tau S(u-)d(u)/y(u)du. The current grid point is
+// excluded because the hazard jump at t affects S(u-) only for u > t.
 // 
 // @param d Value of d(t) at each time point.
-// @param surv Value of S(t) at each time point.
+// @param surv Value of S(t-) at each time point.
 // @param unique_times Unique values of time t.
 // @param y Value of y(t) at each time point.
+// @param int_method Integration method.
 // @return Numeric vector of \eqn{\mu(t; tau)}.
 arma::colvec CalcMuCpp(
   const arma::colvec d,
   const arma::colvec surv,
   const arma::colvec unique_times,
-  const arma::colvec y
+  const arma::colvec y,
+  const std::string int_method
 ) {
-  
-  // Calculate dt.
-  const int n_time = unique_times.size();
-  arma::colvec delta_t = arma::zeros(n_time);
-  delta_t.subvec(1, n_time - 1) = arma::diff(unique_times);
-  
-  // Calculate S(t)d(t) / y(t).
+  const arma::colvec weights = IntegrationWeights(unique_times, int_method);
   arma::colvec integrand = surv % (d / y);
   
-  // Integrate.
-  arma::colvec out = arma::reverse(
-    arma::cumsum(arma::reverse(delta_t % integrand))
+  // Inclusive tail of the quadrature integrand.
+  const arma::colvec inclusive_tail = arma::reverse(
+    arma::cumsum(arma::reverse(weights % integrand))
   );
+
+  // Influence tail strictly after the current grid point.
+  arma::colvec out = arma::zeros(unique_times.size());
+  if(unique_times.size() > 1) {
+    out.head(unique_times.size() - 1) = inclusive_tail.tail(unique_times.size() - 1);
+  }
   return out;
 }
 
@@ -926,7 +943,7 @@ arma::colvec CalcMuCpp(
 //' 
 //' @param haz Value of the hazard at each unique time.
 //' @param idx Subject index.
-//' @param status Status, coded as 0 for censoring, 1 for event, 2 for terminal event.
+//' @param status Status, coded as 0 for censoring, 1 for a measurement, 2 for a terminal event.
 //' @param time Subject observation times.
 //' @param unique_times Unique times at which to obtain the martingale.
 //' @return Matrix with subjects as rows and unique times as columns.
@@ -962,7 +979,11 @@ SEXP CalcMartingaleR(
     
     // Subject's final status.
     arma::uvec key_final_status = arma::find(
-      subj_times == subj_last_time, 1, "last");
+      (subj_times == subj_last_time) %
+      ((subj_status == 0.0) + (subj_status == 2.0)),
+      1,
+      "first"
+    );
     double final_status = arma::as_scalar(
       subj_status.elem(key_final_status)
     );
@@ -1034,7 +1055,11 @@ arma::mat CalcMartingaleCpp(
     
     // Subject's final status.
     arma::uvec key_final_status = arma::find(
-      subj_times == subj_last_time, 1, "last");
+      (subj_times == subj_last_time) %
+      ((subj_status == 0.0) + (subj_status == 2.0)),
+      1,
+      "first"
+    );
     double final_status = arma::as_scalar(
       subj_status.elem(key_final_status)
     );
@@ -1092,10 +1117,10 @@ arma::colvec CalcI1Cpp(
 
 // Calculate I2
 //
-// Calculate \eqn{I_{2,i} = \int_{0}^{\tau} S(t)\{D_{i}(t) - d(t)\}/y(t) dt}.
+// Calculate \eqn{I_{2,i} = \int_{0}^{\tau} S(t-)\{D_{i}(t) - d(t)\}/y(t) dt}.
 // 
 // @param d Vector of d(t).
-// @param surv Vector of S(t).
+// @param surv Vector of S(t-).
 // @param unique_times Vector of unique times t.
 // @param value_mat Matrix of D_{i}(t).
 // @param y Vector of y(t).
@@ -1105,22 +1130,19 @@ arma::colvec CalcI2Cpp(
     const arma::colvec surv,
     const arma::colvec unique_times,
     const arma::mat value_mat,
-    const arma::colvec y
+    const arma::colvec y,
+    const std::string int_method
 ) {
   int n = value_mat.n_rows;
   arma::colvec out = arma::zeros(n);
-  
-  // Calculate dt.
-  const int n_time = unique_times.size();
-  arma::colvec delta_t = arma::zeros(n_time);
-  delta_t.subvec(0, n_time - 2) = arma::diff(unique_times);
+  const arma::colvec weights = IntegrationWeights(unique_times, int_method);
   
   // Loop over subjects.
   for(int i=0; i<n; i++) {
     arma::colvec di = arma::trans(value_mat.row(i));
     
     // Integrate.
-    out(i) = arma::sum(surv % (di - d) % delta_t / y);
+    out(i) = arma::sum(surv % (di - d) % weights / y);
   }
   return out;
 }
@@ -1128,11 +1150,11 @@ arma::colvec CalcI2Cpp(
 
 // Calculate I3
 //
-// Calculate \eqn{I_{3,i} = \int_{0}^{\tau} -S(t)d(t)\{Y_{i}(t) - y(t)\} / y^2(t) dt}.
+// Calculate \eqn{I_{3,i} = \int_{0}^{\tau} -S(t-)d(t)\{Y_{i}(t) - y(t)\} / y^2(t) dt}.
 // 
 // @param d Vector of d(t).
 // @param risk_mat Matrix of Y_{i}(t).
-// @param surv Vector of S(t).
+// @param surv Vector of S(t-).
 // @param unique_times Vector of unique times t.
 // @param y Vector of y(t).
 // @return Vector with I3 for each subject.
@@ -1141,15 +1163,12 @@ arma::colvec CalcI3Cpp(
     const arma::mat risk_mat,
     const arma::colvec surv,
     const arma::colvec unique_times,
-    const arma::colvec y
+    const arma::colvec y,
+    const std::string int_method
 ) {
   int n = risk_mat.n_rows;
   arma::colvec out = arma::zeros(n);
-  
-  // Calculate dt.
-  const int n_time = unique_times.size();
-  arma::colvec delta_t = arma::zeros(n_time);
-  delta_t.subvec(0, n_time - 2) = arma::diff(unique_times);
+  const arma::colvec weights = IntegrationWeights(unique_times, int_method);
   
   const arma::colvec y2 = arma::pow(y, 2);
   
@@ -1158,7 +1177,7 @@ arma::colvec CalcI3Cpp(
     arma::colvec yi = arma::trans(risk_mat.row(i));
     
     // Integrate.
-    out(i) = -1 * arma::sum(surv % d % (yi - y) % delta_t / y2);
+    out(i) = -1 * arma::sum(surv % d % (yi - y) % weights / y2);
   }
   return out;
 }
@@ -1173,7 +1192,8 @@ arma::colvec CalcI3Cpp(
 //' integrals (`i1`, `i2`, `i3`) and the overall influence `psi`.
 //'  
 //' @param idx Unique subject index. 
-//' @param status Status, coded as 0 for censoring, 1 for event, 2 for terminal event.
+//' @param int_method Integration method, selected from "left", "right", "trapezoid".
+//' @param status Status, coded as 0 for censoring, 1 for a measurement, 2 for a terminal event.
 //' @param time Observation time.
 //' @param trunc_time Truncation time? Optional. If omitted, defaults
 //' to the maximum evaluation time.
@@ -1186,7 +1206,8 @@ SEXP InfluenceR(
     const arma::colvec status,
     const arma::colvec time,
     const double trunc_time,
-    const arma::colvec value
+    const arma::colvec value,
+    const std::string int_method = "trapezoid"
 ){
   
   // Subjects.
@@ -1209,7 +1230,7 @@ SEXP InfluenceR(
   const arma::colvec d = est.col(4);
   
   // Calculate mu.
-  const arma::colvec mu = CalcMuCpp(d, surv, unique_times, y);
+  const arma::colvec mu = CalcMuCpp(d, surv, unique_times, y, int_method);
   // Rcpp::Rcout << mu << std::endl; 
   
   // Calculate martingales.
@@ -1224,14 +1245,16 @@ SEXP InfluenceR(
   const arma::mat value_mat = ValueMatrixCpp(unique_times, idx, time, value);
   
   // Calculate I2.
-  const arma::colvec i2 = CalcI2Cpp(d, surv, unique_times, value_mat, y);
+  const arma::colvec i2 = CalcI2Cpp(
+    d, surv, unique_times, value_mat, y, int_method);
   // Rcpp::Rcout << i2 << std::endl; 
   
   // Calculate at risk matrix.
   const arma::mat risk_mat = AtRiskMatrixCpp(unique_times, idx, time);
   
   // Calculate I3.
-  const arma::colvec i3 = CalcI3Cpp(d, risk_mat, surv, unique_times, y);
+  const arma::colvec i3 = CalcI3Cpp(
+    d, risk_mat, surv, unique_times, y, int_method);
   // Rcpp::Rcout << i3 << std::endl; 
   
   // Overall influence function.
@@ -1254,7 +1277,8 @@ SEXP InfluenceR(
 // only.
 // 
 // @param idx Unique subject index. 
-// @param status Status, coded as 0 for censoring, 1 for event, 2 for terminal event. 
+// @param int_method Integration method.
+// @param status Status, coded as 0 for censoring, 1 for a measurement, 2 for a terminal event.
 // @param time Observation time.
 // @param trunc_time Truncation time? Optional. If omitted, defaults
 // to the maximum evaluation time.
@@ -1263,6 +1287,7 @@ SEXP InfluenceR(
 
 arma::colvec InfluenceCpp(
     const arma::colvec idx,
+    const std::string int_method,
     const arma::colvec status,
     const arma::colvec time,
     const double trunc_time,
@@ -1289,7 +1314,7 @@ arma::colvec InfluenceCpp(
   const arma::colvec d = est.col(4);
   
   // Calculate mu.
-  const arma::colvec mu = CalcMuCpp(d, surv, unique_times, y);
+  const arma::colvec mu = CalcMuCpp(d, surv, unique_times, y, int_method);
   // Rcpp::Rcout << mu << std::endl; 
   
   // Calculate martingales.
@@ -1304,14 +1329,16 @@ arma::colvec InfluenceCpp(
   const arma::mat value_mat = ValueMatrixCpp(unique_times, idx, time, value);
   
   // Calculate I2.
-  const arma::colvec i2 = CalcI2Cpp(d, surv, unique_times, value_mat, y);
+  const arma::colvec i2 = CalcI2Cpp(
+    d, surv, unique_times, value_mat, y, int_method);
   // Rcpp::Rcout << i2 << std::endl; 
   
   // Calculate at risk matrix.
   const arma::mat risk_mat = AtRiskMatrixCpp(unique_times, idx, time);
   
   // Calculate I3.
-  const arma::colvec i3 = CalcI3Cpp(d, risk_mat, surv, unique_times, y);
+  const arma::colvec i3 = CalcI3Cpp(
+    d, risk_mat, surv, unique_times, y, int_method);
   // Rcpp::Rcout << i3 << std::endl; 
   
   // Overall influence function.
@@ -1334,8 +1361,9 @@ arma::colvec InfluenceCpp(
 //' The random seed should be set in R prior to calling this function.
 //'  
 //' @param idx Unique subject index. 
+//' @param int_method Integration method, selected from "left", "right", "trapezoid".
 //' @param perturbations Number of perturbations
-//' @param status Status, coded as 0 for censoring, 1 for event, 2 for terminal event.
+//' @param status Status, coded as 0 for censoring, 1 for a measurement, 2 for a terminal event.
 //' @param time Observation time.
 //' @param trunc_time Truncation time? Optional. If omitted, defaults
 //' to the maximum evaluation time.
@@ -1349,11 +1377,13 @@ SEXP PerturbationR(
     const arma::colvec status,
     const arma::colvec time,
     const double trunc_time,
-    const arma::colvec value
+    const arma::colvec value,
+    const std::string int_method = "trapezoid"
 ){
 
   arma::colvec out = arma::zeros(perturbations);
-  arma::colvec psi = InfluenceCpp(idx, status, time, trunc_time, value);
+  arma::colvec psi = InfluenceCpp(
+    idx, int_method, status, time, trunc_time, value);
   arma::colvec weights(psi.size());
   
   for(int i=0; i<perturbations; i++) {
@@ -1370,12 +1400,12 @@ SEXP PerturbationR(
 
 //' Interpolation R
 //'  
-//' Linearly interpolations between each subject's measurements.
+//' Linearly interpolates between each subject's measurements.
 //' The input data should contain no missing values. 
 //'  
 //' @param grid Grid of unique points at which to interpolate.
 //' @param idx Unique subject index. 
-//' @param status Status, coded as 0 for censoring, 1 for event, 2 for terminal event.
+//' @param status Status, coded as 0 for censoring, 1 for a measurement, 2 for a terminal event.
 //' @param time Observation time.
 //' @param value Observation value.
 //' @return Data.frame.
@@ -1404,9 +1434,15 @@ SEXP InterpolateR(
     
     // Current subject.
     arma::colvec subj_status = status.elem(arma::find(idx == unique_idx(i)));
-    double final_status = subj_status(subj_status.size() - 1);
     arma::colvec subj_time = time.elem(arma::find(idx == unique_idx(i)));
     double final_time = subj_time.max();
+    arma::uvec final_key = arma::find(
+      (subj_time == final_time) %
+      ((subj_status == 0.0) + (subj_status == 2.0)),
+      1,
+      "first"
+    );
+    double final_status = arma::as_scalar(subj_status.elem(final_key));
     arma::colvec subj_value = value.elem(arma::find(idx == unique_idx(i)));
     
     // Interpolation points.

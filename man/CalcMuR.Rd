@@ -4,20 +4,25 @@
 \alias{CalcMuR}
 \title{Calculate Mu R}
 \usage{
-CalcMuR(d, surv, unique_times, y)
+CalcMuR(d, surv, unique_times, y, int_method = "trapezoid")
 }
 \arguments{
 \item{d}{Value of d(t) at each time point.}
 
-\item{surv}{Value of S(t) at each time point.}
+\item{surv}{Value of \eqn{S(t-)} at each time point.}
 
 \item{unique_times}{Unique values of time t.}
 
 \item{y}{Value of y(t) at each time point.}
+
+\item{int_method}{Integration method, selected from "left", "right", "trapezoid".}
 }
 \value{
 Numeric vector of \eqn{\mu(t; tau)}.
 }
 \description{
-Evaluate \eqn{\mu(t; \tau) = \int_{t}^{\tau}{S(u)d(u)/y(u)}du}.
+Evaluate the quadrature tail associated with
+\eqn{\mu(t; \tau) = \int_{t}^{\tau}{S(u-)d(u)/y(u)}du}.
+The current grid point is excluded because the hazard jump at \eqn{t}
+affects \eqn{\hat S(u-)} only for \eqn{u > t}.
 }

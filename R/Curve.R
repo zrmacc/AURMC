@@ -32,16 +32,16 @@ Curve <- function(
       time = {{time_name}},
       value = {{value_name}}
     )
-  
-  # Convert index to numeric.
-  if (is.factor(data$idx)) {
-    data$idx <- as.numeric(data$idx)
-  }
+
+  ValidateCoreInput(data, check_arm = FALSE)
   
   # Censor after last.
   if (censor_after_last) {
     data <- CensorAfterLast(data)
   }
+
+  # Encode subject identifiers and order records chronologically.
+  data <- PrepareEstimatorInput(data)
   
   # Check input.
   InputCheck(data, check_arm = FALSE)

@@ -50,8 +50,20 @@ an observation-terminating event, either censoring or death.}
 \item{value_name}{Name of the column containing the measurement.}
 }
 \value{
-Data.frame.
+An object of class \code{AURMC} containing arm-specific estimates
+and difference and ratio contrasts. Ratio inference is returned as
+\code{NA} when either arm-specific area is non-positive.
 }
 \description{
 Compare Areas Under Repeated Measures Curves
+}
+\examples{
+example_data <- data.frame(
+  idx = rep(1:4, each = 2),
+  arm = rep(c(0, 0, 1, 1), each = 2),
+  time = rep(c(0, 1), 4),
+  status = rep(c(1, 0), 4),
+  value = rep(c(1, 1, 2, 2), each = 2)
+)
+CompareAURMCs(example_data, tau = 1)
 }

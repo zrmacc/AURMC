@@ -63,24 +63,32 @@ PlotTwoSample <- function(
       time = {{time_name}},
       value = {{value_name}}
     )
-  
-  # Convert index to numeric.
-  if (is.factor(data$idx)) {
-    data$idx <- as.numeric(data$idx)
-  }
+
+  ValidateCoreInput(data, check_arm = TRUE)
   
   # Censor after last.
   if (censor_after_last) {
     data <- CensorAfterLast(data)
   }
+
+  # Encode subject identifiers and order records chronologically.
+  data <- PrepareEstimatorInput(data)
+  InputCheck(data, check_arm = TRUE)
   
   # Truncation time.
   if (is.null(x_max)) {
     x_max <- max(data$time)
   }
   
+  arm_max_time <- tapply(data$time, data$arm, max)
   if (is.null(tau)) {
-    tau <- x_max
+    tau <- min(arm_max_time)
+  }
+  if (length(tau) != 1 || !is.finite(tau) || tau <= 0 || tau > min(arm_max_time)) {
+    stop(
+      "`tau` must be positive and no greater than the maximum follow-up time in either arm.",
+      call. = FALSE
+    )
   }
   
   # Time axis.
@@ -206,4 +214,3 @@ PlotTwoSample <- function(
   }
   return(q_final)
 }
-

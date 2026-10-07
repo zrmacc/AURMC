@@ -9,7 +9,7 @@
 #' @param time Observation time.
 #' @return Logical.
 #' @noRd
-CheckSubj <- function(idx, status, time) {
+CheckSubj <- function(idx, status, time, require_end = TRUE) {
   
   idx <- unique(idx)
   has_baseline <- any(time == 0 & status == 1)
@@ -23,7 +23,7 @@ CheckSubj <- function(idx, status, time) {
   obs_end <- (status == 0 | status == 2)
   any_obs_end <- any(obs_end)
   
-  if(!any_obs_end) {
+  if(require_end && !any_obs_end) {
     failed <- TRUE
     warning(paste0("Subject ", idx, " has no observation terminating event (status = 0 or status = 2)."))
   }
@@ -32,6 +32,14 @@ CheckSubj <- function(idx, status, time) {
   if(sum_obs_end > 1) {
     failed <- TRUE
     warning(paste0("Subject ", idx, " has multiple observation terminating events (status = 0 or status = 2)."))
+  }
+
+  if (sum_obs_end == 1 && time[obs_end] != max(time)) {
+    failed <- TRUE
+    warning(paste0(
+      "Subject ", idx,
+      " has records after the observation terminating event."
+    ))
   }
   return(failed)  
 }
@@ -50,7 +58,7 @@ CheckArm <- function(arm, idx) {
   
   # Check coding.
   arm_levels <- sort(unique(arm))
-  is_proper_coding <- all(arm_levels == c(0, 1))
+  is_proper_coding <- length(arm_levels) == 2 && all(arm_levels == c(0, 1))
   if (!is_proper_coding) {
     failed <- TRUE
     warning("Treatment arm is improperly coded. Expecting two levels, c(0, 1).")
@@ -71,6 +79,77 @@ CheckArm <- function(arm, idx) {
 }
 
 
+#' Validate Core Input
+#'
+#' Validate fields used by the compiled estimators before coercion.
+#'
+#' @param data Data.frame with standardized column names.
+#' @param check_arm Check the treatment-arm field?
+#' @return None.
+#' @noRd
+ValidateCoreInput <- function(data, check_arm = FALSE) {
+  if (!is.data.frame(data) || nrow(data) == 0) {
+    stop("`data` must be a non-empty data.frame.", call. = FALSE)
+  }
+
+  required <- c("idx", "status", "time", "value")
+  if (check_arm) {
+    required <- c(required, "arm")
+  }
+  missing_names <- setdiff(required, names(data))
+  if (length(missing_names) > 0) {
+    stop(
+      "Missing required column(s): ", paste(missing_names, collapse = ", "), ".",
+      call. = FALSE
+    )
+  }
+
+  if (anyNA(data$idx)) {
+    stop("Subject indices must not be missing.", call. = FALSE)
+  }
+  if (!is.numeric(data$time) || anyNA(data$time) || any(!is.finite(data$time))) {
+    stop("Observation times must be finite, non-missing numeric values.", call. = FALSE)
+  }
+  if (any(data$time < 0)) {
+    stop("Observation times must be non-negative.", call. = FALSE)
+  }
+  if (!is.numeric(data$status) || anyNA(data$status) ||
+      any(!is.finite(data$status)) || any(!data$status %in% c(0, 1, 2))) {
+    stop("Status must be numeric and coded as 0, 1, or 2.", call. = FALSE)
+  }
+  if (!is.numeric(data$value)) {
+    stop("Measurement values must be numeric (missing values are allowed).", call. = FALSE)
+  }
+  if (any(!is.na(data$value) & !is.finite(data$value))) {
+    stop("Measurement values must be finite or missing.", call. = FALSE)
+  }
+
+  if (check_arm &&
+      (!is.numeric(data$arm) || anyNA(data$arm) ||
+       any(!is.finite(data$arm)) || any(!data$arm %in% c(0, 1)))) {
+    stop("Treatment arm must be numeric and coded as 0 or 1.", call. = FALSE)
+  }
+
+  invisible(NULL)
+}
+
+
+#' Prepare Estimator Input
+#'
+#' Encode arbitrary subject identifiers as consecutive integers and order each
+#' subject's records chronologically, as required by the compiled routines.
+#'
+#' @param data Data.frame with standardized column names.
+#' @return Prepared data.frame.
+#' @noRd
+PrepareEstimatorInput <- function(data) {
+  data$idx <- match(data$idx, unique(data$idx))
+  data <- data[order(data$idx, data$time), , drop = FALSE]
+  rownames(data) <- NULL
+  data
+}
+
+
 #' Input Check
 #' 
 #' Check for proper input formatting.
@@ -79,13 +158,15 @@ CheckArm <- function(arm, idx) {
 #' @param check_arm Check arm?
 #' @return None.
 #' @noRd
-InputCheck <- function(data, check_arm = FALSE) {
+InputCheck <- function(data, check_arm = FALSE, require_end = TRUE) {
+  ValidateCoreInput(data, check_arm = check_arm)
   
   idx <- status <- time <- NULL
   check <- data %>%
     dplyr::group_by(idx) %>%
     dplyr::summarise(
-      failed = CheckSubj(idx, status, time)
+      failed = CheckSubj(idx, status, time, require_end = require_end),
+      .groups = "drop"
     )
   failed <- any(check$failed)
   
@@ -110,6 +191,9 @@ InputCheck <- function(data, check_arm = FALSE) {
 #' @param data Data.frame.
 #' @return None.
 CensorAfterLast <- function(data) {
+  ValidateCoreInput(data, check_arm = "arm" %in% names(data))
+  data <- data[order(data$idx, data$time), , drop = FALSE]
+  rownames(data) <- NULL
   
   split_data <- split(x = data, f = data$idx)
   formatted_data <- lapply(split_data, function(df) {
@@ -122,7 +206,7 @@ CensorAfterLast <- function(data) {
     }
     
     # Add censoring record.
-    last_row <- df[nrow(df), ]
+    last_row <- df[which.max(df$time), , drop = FALSE]
     last_row$status <- 0
     last_row$time <- last_row$time + 1e-4
     df <- rbind(df, last_row)
@@ -134,4 +218,3 @@ CensorAfterLast <- function(data) {
   rownames(out) <- NULL
   return(out)
 }
-

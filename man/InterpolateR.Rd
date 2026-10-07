@@ -4,7 +4,7 @@
 \alias{InterpolateR}
 \title{Interpolation R
 
-Linearly interpolations between each subject's measurements.
+Linearly interpolates between each subject's measurements.
 The input data should contain no missing values.}
 \usage{
 InterpolateR(grid, idx, status, time, value)
@@ -14,7 +14,7 @@ InterpolateR(grid, idx, status, time, value)
 
 \item{idx}{Unique subject index.}
 
-\item{status}{Status, coded as 0 for censoring, 1 for event, 2 for terminal event.}
+\item{status}{Status, coded as 0 for censoring, 1 for a measurement, 2 for a terminal event.}
 
 \item{time}{Observation time.}
 
@@ -26,6 +26,6 @@ Data.frame.
 \description{
 Interpolation R
 
-Linearly interpolations between each subject's measurements.
+Linearly interpolates between each subject's measurements.
 The input data should contain no missing values.
 }

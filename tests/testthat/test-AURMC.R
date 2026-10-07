@@ -55,3 +55,36 @@ test_that("AURMC with custom column names.", {
   expect_equal(nrow(out), 1L)
   expect_true(is.finite(out$auc))
 })
+
+test_that("AURMC supports character identifiers and unordered records.", {
+  sorted <- data.frame(
+    idx = c(1, 1, 2, 2, 2),
+    time = c(0, 1, 0, 1, 2),
+    status = c(1, 0, 1, 1, 0),
+    value = c(1, 1, 2, 2, 2)
+  )
+  unordered <- sorted[c(5, 2, 3, 1, 4), ]
+  unordered$idx <- c("beta", "alpha", "beta", "alpha", "beta")
+
+  expect_equal(
+    AURMC(unordered, tau = 1),
+    AURMC(sorted, tau = 1),
+    tolerance = 1e-12
+  )
+})
+
+test_that("AURMC validates the truncation time and degenerate null.", {
+  df <- data.frame(
+    idx = c(1, 1, 2, 2),
+    time = c(0, 1, 0, 1),
+    status = c(1, 0, 1, 0),
+    value = 0
+  )
+  expect_error(AURMC(df, tau = 2), "no greater than the maximum follow-up")
+  out <- AURMC(df, tau = 1)
+  expect_equal(out$auc, 0)
+  expect_equal(out$se, 0)
+  expect_equal(out$p, 1)
+  out_boot <- AURMC(df, tau = 1, perturbations = 20, random_state = 1)
+  expect_equal(out_boot$p, c(1, 1))
+})

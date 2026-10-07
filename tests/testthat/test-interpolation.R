@@ -46,3 +46,17 @@ test_that("Test interpolation.", {
   expect_equal(obs, exp)
   
 })
+
+test_that("Interpolate preserves character identifiers and orders records.", {
+  data <- data.frame(
+    idx = c("b", "a", "b", "a"),
+    status = c(2, 0, 1, 1),
+    time = c(1, 1, 0, 0),
+    value = c(-1, 1, 0, 0)
+  )
+  out <- Interpolate(data, grid = c(0, 0.5, 1))
+  expect_type(out$idx, "character")
+  expect_setequal(unique(out$idx), c("a", "b"))
+  expect_equal(out$value[out$idx == "a"], c(0, 0.5, 1))
+  expect_equal(out$value[out$idx == "b"], c(0, -0.5, -1))
+})

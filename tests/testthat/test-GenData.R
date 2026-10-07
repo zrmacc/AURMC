@@ -30,3 +30,10 @@ test_that("GenData passes InputCheck when censor_after_last applied.", {
   out_censored <- CensorAfterLast(out)
   expect_error(InputCheck(out_censored, check_arm = FALSE), NA)
 })
+
+test_that("GenData validates simulation arguments.", {
+  expect_error(GenData(-1, 0.25, 10, 2), "Event rates")
+  expect_error(GenData(0.5, 0.25, 0, 2), "positive integer")
+  expect_error(GenData(0.5, 0.25, 10, 0), "positive number")
+  expect_error(GenData(0.5, 0.25, 10, 2, last_missing = NA), "TRUE or FALSE")
+})

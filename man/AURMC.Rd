@@ -46,8 +46,18 @@ an observation-terminating event, either censoring or death.}
 \item{value_name}{Name of the column containing the measurement.}
 }
 \value{
-Data.frame.
+A data.frame containing the method, truncation time, area estimate,
+standard error, confidence limits, and p-value.
 }
 \description{
 Area Under the Repeated Measures Curve
+}
+\examples{
+example_data <- data.frame(
+  idx = rep(1:3, each = 2),
+  time = rep(c(0, 1), 3),
+  status = rep(c(1, 0), 3),
+  value = c(1, 1, 2, 2, 3, 3)
+)
+AURMC(example_data, tau = 1)
 }

@@ -31,12 +31,12 @@ AtRiskMatrixR <- function(eval_times, idx, time) {
 #' Constructs a matrix with evaluation times as rows, and 4 columns:
 #' * time Evaluation times.
 #' * nar Number at risk.
-#' * surv Survival probability.
+#' * surv Left-limit survival probability, \eqn{\hat S(t-)}.
 #' * haz Hazard.
 #'  
 #' @param eval_times Evaluation times.
 #' @param idx Unique subject index.
-#' @param status Status, coded as 0 for censoring, 1 for event, 2 for terminal event.
+#' @param status Status, coded as 0 for censoring, 1 for a measurement, 2 for a terminal event.
 #' @param time Observation time.
 #' @return Data.frame.
 KaplanMeierR <- function(eval_times, idx, status, time) {
@@ -46,7 +46,7 @@ KaplanMeierR <- function(eval_times, idx, status, time) {
 #' Tabulate Estimator R
 #'  
 #' @param idx Unique subject index. 
-#' @param status Status, coded as 0 for censoring, 1 for event, 2 for terminal event.
+#' @param status Status, coded as 0 for censoring, 1 for a measurement, 2 for a terminal event.
 #' @param time Observation time.
 #' @param value Observation value.
 #' @param eval_times Evaluation times. If omitted, defaults to the
@@ -64,7 +64,7 @@ EstimatorR <- function(idx, status, time, value, eval_times = NULL, int_method =
 #' Draw Bootstrap R
 #'  
 #' @param idx Unique subject index. 
-#' @param status Status, coded as 0 for censoring, 1 for event, 2 for terminal event.
+#' @param status Status, coded as 0 for censoring, 1 for a measurement, 2 for a terminal event.
 #' @param time Observation time.
 #' @param value Observation value.
 #' @return Numeric matrix.
@@ -81,7 +81,7 @@ DrawBootstrapR <- function(idx, status, time, value) {
 #' @param boot Bootstrap replicates.
 #' @param eval_times Evaluation times.
 #' @param idx Unique subject index. 
-#' @param status Status, coded as 0 for censoring, 1 for event, 2 for terminal event.
+#' @param status Status, coded as 0 for censoring, 1 for a measurement, 2 for a terminal event.
 #' @param time Observation time.
 #' @param value Observation value.
 #' @param int_method Integration method, selected from "left", "right", "trapezoid".
@@ -96,15 +96,19 @@ BootstrapSamplesR <- function(boot, eval_times, idx, status, time, value, int_me
 
 #' Calculate Mu R
 #'
-#' Evaluate \eqn{\mu(t; \tau) = \int_{t}^{\tau}{S(u)d(u)/y(u)}du}.
+#' Evaluate the quadrature tail associated with
+#' \eqn{\mu(t; \tau) = \int_{t}^{\tau}{S(u-)d(u)/y(u)}du}.
+#' The current grid point is excluded because the hazard jump at \eqn{t}
+#' affects \eqn{\hat S(u-)} only for \eqn{u > t}.
 #' 
 #' @param d Value of d(t) at each time point.
-#' @param surv Value of S(t) at each time point.
+#' @param surv Value of \eqn{S(t-)} at each time point.
 #' @param unique_times Unique values of time t.
 #' @param y Value of y(t) at each time point.
+#' @param int_method Integration method, selected from "left", "right", "trapezoid".
 #' @return Numeric vector of \eqn{\mu(t; tau)}.
-CalcMuR <- function(d, surv, unique_times, y) {
-    .Call(`_AURMC_CalcMuR`, d, surv, unique_times, y)
+CalcMuR <- function(d, surv, unique_times, y, int_method = "trapezoid") {
+    .Call(`_AURMC_CalcMuR`, d, surv, unique_times, y, int_method)
 }
 
 #' Calculate Martingale
@@ -113,7 +117,7 @@ CalcMuR <- function(d, surv, unique_times, y) {
 #' 
 #' @param haz Value of the hazard at each unique time.
 #' @param idx Subject index.
-#' @param status Status, coded as 0 for censoring, 1 for event, 2 for terminal event.
+#' @param status Status, coded as 0 for censoring, 1 for a measurement, 2 for a terminal event.
 #' @param time Subject observation times.
 #' @param unique_times Unique times at which to obtain the martingale.
 #' @return Matrix with subjects as rows and unique times as columns.
@@ -127,14 +131,15 @@ CalcMartingaleR <- function(haz, idx, status, time, unique_times) {
 #' integrals (`i1`, `i2`, `i3`) and the overall influence `psi`.
 #'  
 #' @param idx Unique subject index. 
-#' @param status Status, coded as 0 for censoring, 1 for event, 2 for terminal event.
+#' @param int_method Integration method, selected from "left", "right", "trapezoid".
+#' @param status Status, coded as 0 for censoring, 1 for a measurement, 2 for a terminal event.
 #' @param time Observation time.
 #' @param trunc_time Truncation time? Optional. If omitted, defaults
 #' to the maximum evaluation time.
 #' @param value Observation value.
 #' @return Data.frame.
-InfluenceR <- function(idx, status, time, trunc_time, value) {
-    .Call(`_AURMC_InfluenceR`, idx, status, time, trunc_time, value)
+InfluenceR <- function(idx, status, time, trunc_time, value, int_method = "trapezoid") {
+    .Call(`_AURMC_InfluenceR`, idx, status, time, trunc_time, value, int_method)
 }
 
 #' Perturbation R
@@ -147,29 +152,29 @@ InfluenceR <- function(idx, status, time, trunc_time, value) {
 #' The random seed should be set in R prior to calling this function.
 #'  
 #' @param idx Unique subject index. 
+#' @param int_method Integration method, selected from "left", "right", "trapezoid".
 #' @param perturbations Number of perturbations
-#' @param status Status, coded as 0 for censoring, 1 for event, 2 for terminal event.
+#' @param status Status, coded as 0 for censoring, 1 for a measurement, 2 for a terminal event.
 #' @param time Observation time.
 #' @param trunc_time Truncation time? Optional. If omitted, defaults
 #' to the maximum evaluation time.
 #' @param value Observation value.
 #' @return Numeric vector.
-PerturbationR <- function(idx, perturbations, status, time, trunc_time, value) {
-    .Call(`_AURMC_PerturbationR`, idx, perturbations, status, time, trunc_time, value)
+PerturbationR <- function(idx, perturbations, status, time, trunc_time, value, int_method = "trapezoid") {
+    .Call(`_AURMC_PerturbationR`, idx, perturbations, status, time, trunc_time, value, int_method)
 }
 
 #' Interpolation R
 #'  
-#' Linearly interpolations between each subject's measurements.
+#' Linearly interpolates between each subject's measurements.
 #' The input data should contain no missing values. 
 #'  
 #' @param grid Grid of unique points at which to interpolate.
 #' @param idx Unique subject index. 
-#' @param status Status, coded as 0 for censoring, 1 for event, 2 for terminal event.
+#' @param status Status, coded as 0 for censoring, 1 for a measurement, 2 for a terminal event.
 #' @param time Observation time.
 #' @param value Observation value.
 #' @return Data.frame.
 InterpolateR <- function(grid, idx, status, time, value) {
     .Call(`_AURMC_InterpolateR`, grid, idx, status, time, value)
 }
-

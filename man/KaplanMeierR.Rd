@@ -11,7 +11,7 @@ KaplanMeierR(eval_times, idx, status, time)
 
 \item{idx}{Unique subject index.}
 
-\item{status}{Status, coded as 0 for censoring, 1 for event, 2 for terminal event.}
+\item{status}{Status, coded as 0 for censoring, 1 for a measurement, 2 for a terminal event.}
 
 \item{time}{Observation time.}
 }
@@ -23,7 +23,7 @@ Constructs a matrix with evaluation times as rows, and 4 columns:
 \itemize{
 \item time Evaluation times.
 \item nar Number at risk.
-\item surv Survival probability.
+\item surv Left-limit survival probability, \eqn{\hat S(t-)}.
 \item haz Hazard.
 }
 }

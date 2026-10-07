@@ -42,6 +42,8 @@ test_that("Test curve tabulation.", {
   # Checking calculation of integrand. 
   exp <- km_tab$surv * (df_sum$d / df_sum$y)
   expect_equal(obs$exp, exp)
+  expect_equal(obs$surv, c(1, 1, 2/3))
+  expect_equal(obs$exp, c(2, 7/3, 2/3))
   
   # Checking curve.
   curve <- Curve(df)

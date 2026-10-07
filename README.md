@@ -6,12 +6,12 @@
 [![R-CMD-check](https://github.com/zrmacc/AURMC/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/zrmacc/AURMC/actions/workflows/R-CMD-check.yaml)
 <!-- badges: end -->
 
-Zachary R. McCaw <br> Updated: 2025-07-30
+Zachary R. McCaw <br> Updated: 2026-10-06
 
 ## Description
 
-This package performs inference on the area under the repeated measures
-curve.
+This package estimates and compares areas under repeated-measures curves
+in the presence of censoring and terminal events.
 
 ## Installation
 
@@ -72,7 +72,7 @@ Note that:
 
 ## Interpolation
 
-The function `InterpolateR` *optionally* performs linear interpolation
+The function `Interpolate` *optionally* performs linear interpolation
 between measurements to enable more precise area estimation. This step
 can be skipped if interpolation is not meaningful for the outcome of
 interest, for example the value remains constant between observations.
@@ -126,8 +126,8 @@ data <- AURMC::GenData(
 AURMC::AURMC(data, tau = 2.0)
 ```
 
-    ##       method tau         auc        se     lower     upper         p
-    ## 1 asymptotic   2 -0.01260658 0.2577937 -0.517873 0.4926599 0.9609975
+    ##       method tau         auc        se      lower     upper         p
+    ## 1 asymptotic   2 0.009034877 0.2307179 -0.4431639 0.4612337 0.9687629
 
 Case where the expected area is non-zero:
 
@@ -143,8 +143,8 @@ data <- AURMC::GenData(
 AURMC::AURMC(data, tau = 2.0)
 ```
 
-    ##       method tau    auc        se     lower    upper          p
-    ## 1 asymptotic   2 1.1985 0.2735012 0.6624475 1.734553 1.1756e-05
+    ##       method tau      auc        se     lower    upper          p
+    ## 1 asymptotic   2 1.234052 0.2420008 0.7597394 1.708365 3.4078e-07
 
 ## Two-sample Problem
 
@@ -172,7 +172,7 @@ data1 <- AURMC::GenData(
   value_mean = 1.0
 )
 data1$arm <- 1
-data1$idx <- nrow(data0) + data1$idx
+data1$idx <- max(data0$idx) + data1$idx
 
 # Overall data set.
 data <- rbind(data0, data1)
@@ -181,21 +181,21 @@ AURMC::CompareAURMCs(data)
 ```
 
     ## Arm 0:
-    ##       method arm tau auc    se lower upper        p
-    ## 1 asymptotic   0 3.6   1 0.227 0.556  1.45 1.01e-05
+    ##       method arm  tau  auc    se lower upper        p
+    ## 1 asymptotic   0 2.69 1.02 0.239 0.552  1.49 1.95e-05
     ## 
     ## 
     ## Arm 1:
-    ##       method arm tau  auc    se lower upper        p
-    ## 1 asymptotic   1 3.6 1.34 0.278 0.793  1.88 1.47e-06
+    ##       method arm  tau  auc    se lower upper       p
+    ## 1 asymptotic   1 2.69 1.32 0.263   0.8  1.83 5.6e-07
     ## 
     ## 
     ## Contrast:
     ##       method  stat   est    se  lower upper     p
-    ## 1 asymptotic A1-A0 0.336 0.358 -0.366  1.04 0.348
-    ## 2 asymptotic A1/A0 1.340 0.411  0.732  2.44 0.346
+    ## 1 asymptotic A1-A0 0.295 0.355 -0.402 0.991 0.407
+    ## 2 asymptotic A1/A0 1.290 0.397  0.705 2.360 0.410
 
-Case of a true differnece:
+Case of a true difference:
 
 ``` r
 set.seed(102)
@@ -219,7 +219,7 @@ data1 <- AURMC::GenData(
   value_mean = 2.0
 )
 data1$arm <- 1
-data1$idx <- nrow(data0) + data1$idx
+data1$idx <- max(data0$idx) + data1$idx
 
 # Overall data set.
 data <- rbind(data0, data1)
@@ -228,16 +228,16 @@ AURMC::CompareAURMCs(data)
 ```
 
     ## Arm 0:
-    ##       method arm tau auc    se lower upper        p
-    ## 1 asymptotic   0 3.6   1 0.227 0.556  1.45 1.01e-05
+    ##       method arm  tau  auc    se lower upper        p
+    ## 1 asymptotic   0 2.69 1.02 0.239 0.552  1.49 1.95e-05
     ## 
     ## 
     ## Arm 1:
-    ##       method arm tau  auc    se lower upper        p
-    ## 1 asymptotic   1 3.6 2.53 0.458  1.63  3.43 3.44e-08
+    ##       method arm  tau  auc    se lower upper        p
+    ## 1 asymptotic   1 2.69 2.43 0.413  1.62  3.24 3.99e-09
     ## 
     ## 
     ## Contrast:
     ##       method  stat  est    se lower upper       p
-    ## 1 asymptotic A1-A0 1.53 0.511 0.526  2.53 0.00281
-    ## 2 asymptotic A1/A0 2.53 0.733 1.430  4.46 0.00140
+    ## 1 asymptotic A1-A0 1.41 0.477 0.473  2.34 0.00316
+    ## 2 asymptotic A1/A0 2.38 0.688 1.350  4.19 0.00274

@@ -15,7 +15,7 @@ GenData(
 )
 }
 \arguments{
-\item{censoring_rate}{Rate for the time to death.}
+\item{censoring_rate}{Rate for the time to censoring.}
 
 \item{death_rate}{Rate for the time to death.}
 
@@ -30,9 +30,14 @@ GenData(
 \item{value_sd}{Standard deviation of measurement.}
 }
 \value{
-Data.frame.
+A data.frame with subject index, observation time, status, and
+repeated measurement value.
 }
 \description{
 Simulates repeated measures data at regular time points subject to
 exponential censoring and death.
+}
+\examples{
+set.seed(1)
+GenData(censoring_rate = 0.5, death_rate = 0.25, n = 5, tau = 2)
 }

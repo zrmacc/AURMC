@@ -29,19 +29,38 @@ which is the area under the curve (AUC) up to the truncation time $\tau$. A cons
 
 $$
 \begin{gathered}
-\hat{\mu} = \int_{0}^{\tau} \hat{S}(t) \frac{\bar{D}(t)}{\bar{Y}(t)}dt, \\
+\hat{\mu} = \int_{0}^{\tau} \hat{S}(t-) \frac{\bar{D}(t)}{\bar{Y}(t)}dt, \\
 \bar{D}(t) = \frac{1}{n}\sum_{i=1}^{n}D_{i}(t)\mathbb{I}(X_{i} \geq t), \\
 \bar{Y}(t) = \frac{1}{n}\sum_{i=1}^{n}\mathbb{I}(X_{i} \geq t).
 \end{gathered}
 $$
 
-Here $\hat{S}(t)$ is the Kaplan-Meier estimate of the survival probability at time $t$, $\bar{D}(t)$ is the mean value of the measurement among subjects remaining at risk, and $\bar{Y}(t)$ is the proportion of the sample remaining at risk. 
+Here $\hat{S}(t-)$ is the Kaplan-Meier survival probability immediately before
+time $t$, $\bar{D}(t)$ is the mean value of the measurement among subjects
+remaining at risk, and $\bar{Y}(t)$ is the proportion of the sample remaining
+at risk. Thus a subject with a terminal event at $t$ is included in both the
+risk set and the survival probability relevant to time $t$. At an observed
+event time $t_j$,
+$\hat{S}(t_j-) = \prod_{t_k < t_j}\{1 - d_k/Y_k\}$. This convention matters
+for tied or discrete event times; it agrees with
+$Y_i(t)=\mathbb{I}(X_i \geq t)$.
+
+## Choosing the truncation time
+
+Choose $\tau$ before examining the treatment contrast, using clinical
+relevance and follow-up that is plausibly supported in every arm. Heavy
+censoring near $\tau$ can leave a sparse risk set and make large-sample Wald
+intervals optimistic. Inspect `nar` or `y` from `TabRMC()` near $\tau$ and, when
+late follow-up is sparse, report sensitivity analyses at substantively
+defensible earlier truncation times. There is no universal minimum risk-set
+threshold; an appropriate choice depends on the design, censoring pattern, and
+intended estimand.
 
 ## Method of integration
 
-Let $\hat{E}(t) = \hat{S}(t) \bar{D}(t) / \bar{Y}(t)$ denote the estimated value of $\mathbb{E}\{D(t)\}$ at time $t$. Partition the interval $[0, \tau)$ as:
+Let $\hat{E}(t) = \hat{S}(t-) \bar{D}(t) / \bar{Y}(t)$ denote the estimated value of $\mathbb{E}\{D(t)\}$ at time $t$. Partition the interval $[0, \tau)$ as:
 $$
-0 = t_{0} \leq t_{1} < \cdots < u_{K} \leq u_{K+1} = \tau,
+0 = t_{0} \leq t_{1} < \cdots < t_{K} \leq t_{K+1} = \tau,
 $$
 where $\{t_{k}: 1 \leq k \leq K\}$ are the times at which the value of $\hat{E}(t)$ changes. $\hat{\mu}$ may be calculated in several ways, all of which provide consistent estimation. The left sum is:
 $$
@@ -75,7 +94,7 @@ tab <- AURMC::TabRMC(data)
 show(tab)
 ```
 
-Here `nar` is the number at risk at the beginning of the interval, `y` is $\bar{Y}(t)$, `haz` is the hazard of death, `surv` is the survival probability, `d` is $\bar{D}(t)$, and `exp` is $\hat{E}(t) = \hat{S}(t) \bar{D}(t) / \bar{Y}(t)$. 
+Here `nar` is the number at risk at the beginning of the interval, `y` is $\bar{Y}(t)$, `haz` is the hazard of death, `surv` is the left-limit survival probability $\hat{S}(t-)$, `d` is $\bar{D}(t)$, and `exp` is $\hat{E}(t) = \hat{S}(t-) \bar{D}(t) / \bar{Y}(t)$.
 
 \newpage
 The AUC can be calculated as:
@@ -91,8 +110,7 @@ cat("Right sum:\n")
 show(right)
 
 # Trapezoidal sum.
-right <- AURMC::AURMC(data, int_method = "trapezoid")
+trapezoid <- AURMC::AURMC(data, int_method = "trapezoid")
 cat("Trapezoidal sum:\n")
-show(right)
+show(trapezoid)
 ```
-

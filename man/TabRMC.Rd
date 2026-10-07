@@ -33,7 +33,9 @@ an observation-terminating event, either censoring or death.}
 \item{value_name}{Name of the column containing the measurement.}
 }
 \value{
-Data.frame.
+A data.frame tabulating time, number and proportion at risk,
+terminal-event hazard, left-limit survival \eqn{\hat S(t-)}, observed-value
+mean, and the estimated repeated measures curve.
 }
 \description{
 Tabulate the Repeated Measures Curve

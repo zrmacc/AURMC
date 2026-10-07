@@ -65,14 +65,18 @@ SimSubj <- function(
 #' Simulates repeated measures data at regular time points subject to
 #' exponential censoring and death.
 #' 
-#' @param censoring_rate Rate for the time to death.
+#' @param censoring_rate Rate for the time to censoring.
 #' @param death_rate Rate for the time to death.
 #' @param n Number of subjects.
 #' @param tau Truncation time.
 #' @param last_missing Should the last value be missing? Default: FALSE.
 #' @param value_mean Mean of measurement.
 #' @param value_sd Standard deviation of measurement.
-#' @return Data.frame.
+#' @return A data.frame with subject index, observation time, status, and
+#'   repeated measurement value.
+#' @examples
+#' set.seed(1)
+#' GenData(censoring_rate = 0.5, death_rate = 0.25, n = 5, tau = 2)
 #' @export
 GenData <- function(
     censoring_rate,
@@ -83,6 +87,25 @@ GenData <- function(
     value_mean = 0,
     value_sd = 1
 ) {
+  rates <- c(censoring_rate, death_rate)
+  if (length(rates) != 2 || anyNA(rates) || any(!is.finite(rates)) || any(rates < 0)) {
+    stop("Event rates must be finite, non-negative numbers.", call. = FALSE)
+  }
+  if (length(n) != 1 || !is.finite(n) || n < 1 || n != as.integer(n)) {
+    stop("`n` must be a positive integer.", call. = FALSE)
+  }
+  if (length(tau) != 1 || !is.finite(tau) || tau <= 0) {
+    stop("`tau` must be a single positive number.", call. = FALSE)
+  }
+  if (length(value_sd) != 1 || !is.finite(value_sd) || value_sd < 0) {
+    stop("`value_sd` must be a single non-negative number.", call. = FALSE)
+  }
+  if (length(value_mean) != 1 || !is.finite(value_mean)) {
+    stop("`value_mean` must be a single finite number.", call. = FALSE)
+  }
+  if (length(last_missing) != 1 || !is.logical(last_missing) || is.na(last_missing)) {
+    stop("`last_missing` must be TRUE or FALSE.", call. = FALSE)
+  }
   
   data <- lapply(seq_len(n), function(i) {
     subj <- SimSubj(
@@ -100,4 +123,3 @@ GenData <- function(
   out <- do.call(rbind, data)
   return(out)
 }
-

@@ -32,7 +32,7 @@ print.AURMC <- function(x, ...) {
     out <- y
     if (is.numeric(y)) {
       dec_part <- (y %% 1)
-      if (max(dec_part, na.rm = TRUE) > 0) {
+      if (any(is.finite(dec_part)) && max(dec_part, na.rm = TRUE) > 0) {
         out <- signif(y, digits = 3)
       }
     }

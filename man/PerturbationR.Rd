@@ -8,14 +8,22 @@ Generates realizations of \eqn{\frac{1}{n}\sum_{i=1}^{n}\psi_{i}w_{i}},
 where \eqn{\psi_{i}} is the influence function for the ith subject and the
 \eqn{w_{i}} are IID random weights.}
 \usage{
-PerturbationR(idx, perturbations, status, time, trunc_time, value)
+PerturbationR(
+  idx,
+  perturbations,
+  status,
+  time,
+  trunc_time,
+  value,
+  int_method = "trapezoid"
+)
 }
 \arguments{
 \item{idx}{Unique subject index.}
 
 \item{perturbations}{Number of perturbations}
 
-\item{status}{Status, coded as 0 for censoring, 1 for event, 2 for terminal event.}
+\item{status}{Status, coded as 0 for censoring, 1 for a measurement, 2 for a terminal event.}
 
 \item{time}{Observation time.}
 
@@ -23,6 +31,8 @@ PerturbationR(idx, perturbations, status, time, trunc_time, value)
 to the maximum evaluation time.}
 
 \item{value}{Observation value.}
+
+\item{int_method}{Integration method, selected from "left", "right", "trapezoid".}
 }
 \value{
 Numeric vector.

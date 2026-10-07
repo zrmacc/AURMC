@@ -3,7 +3,7 @@
 
 #' Interpolate
 #' 
-#' Linearly interpolations between each subject's measurements.
+#' Linearly interpolates between each subject's measurements.
 #' The input data should contain no missing values. 
 #'
 #' @section Notes:
@@ -19,7 +19,16 @@
 #' @param rm_na Remove records interpolated to NA?
 #' @param time_name Name of column containing the observation time.
 #' @param value_name Name of the column containing the measurement.
-#' @return Data.frame.
+#' @return A data.frame containing subject index, status, time, and the
+#'   interpolated value.
+#' @examples
+#' example_data <- data.frame(
+#'   idx = c(1, 1, 2, 2),
+#'   status = c(1, 0, 1, 2),
+#'   time = c(0, 1, 0, 1),
+#'   value = c(0, 1, 0, -1)
+#' )
+#' Interpolate(example_data, grid = c(0, 0.5, 1))
 #' @export 
 Interpolate <- function(
   data,  
@@ -30,6 +39,10 @@ Interpolate <- function(
   time_name = "time",
   value_name = "value"
 ) {
+  if (!is.numeric(grid) || length(grid) == 0 || anyNA(grid) ||
+      any(!is.finite(grid)) || any(grid < 0)) {
+    stop("`grid` must contain finite, non-negative numeric values.", call. = FALSE)
+  }
   
   # Format input data.
   data <- data %>%
@@ -39,20 +52,16 @@ Interpolate <- function(
       time = {{time_name}},
       value = {{value_name}}
     )
+
+  ValidateCoreInput(data, check_arm = FALSE)
   
-  # Convert index to numeric.
-  idx_replaced <- FALSE
-  idx <- numeric_idx <- NULL
-  if (is.factor(data$idx)) {
-    data$numeric_idx <- as.numeric(data$idx)
-    idx_map <- data %>% dplyr::select(idx, numeric_idx) %>% unique()
-    data$idx <- data$numeric_idx
-    data$numeric_idx <- NULL
-    idx_replaced <- TRUE
-  }
+  # Encode subject identifiers and order records chronologically.
+  original_idx <- unique(data$idx)
+  data <- PrepareEstimatorInput(data)
+  InputCheck(data, check_arm = FALSE)
   
   # Union grid with each subject's last time.
-  time <- last_time <- NULL
+  idx <- time <- last_time <- NULL
   last_times <- data %>%
     dplyr::group_by(idx) %>%
     dplyr::summarise(
@@ -79,13 +88,7 @@ Interpolate <- function(
   }
   
   # Restore original index.
-  if (idx_replaced) {
-    interpolated$numeric_idx <- interpolated$idx
-    interpolated$idx <- NULL
-    interpolated <- interpolated %>%
-      dplyr::inner_join(idx_map, by = "numeric_idx")
-    interpolated$numeric_idx <- NULL
-  }
+  interpolated$idx <- original_idx[as.integer(interpolated$idx)]
   
   return(interpolated)
 }

@@ -20,10 +20,11 @@ Diff <- function(one_sample, alpha = 0.05) {
     dplyr::mutate(
       lower = est - z * se,
       upper = est + z * se,
-      p = 2 * stats::pnorm(
-        q = abs(est) / se,
-        lower.tail = FALSE
-      )
+      p = if (se == 0) {
+        if (est == 0) 1 else 0
+      } else {
+        2 * stats::pnorm(q = abs(est) / se, lower.tail = FALSE)
+      }
     )
   return(out)
 }
@@ -38,6 +39,21 @@ Diff <- function(one_sample, alpha = 0.05) {
 Ratio <- function(one_sample, alpha = 0.05) {
   z <- stats::qnorm(1 - alpha / 2)
   arm <- auc <- est <- log_se <- se <- NULL
+  auc0 <- one_sample$auc[one_sample$arm == 0]
+  auc1 <- one_sample$auc[one_sample$arm == 1]
+  if (length(auc0) != 1 || length(auc1) != 1) {
+    stop("Ratio inference requires one result from each treatment arm.", call. = FALSE)
+  }
+  if (!is.finite(auc0) || !is.finite(auc1) || auc0 <= 0 || auc1 <= 0) {
+    return(data.frame(
+      stat = "A1/A0",
+      est = auc1 / auc0,
+      se = NA_real_,
+      lower = NA_real_,
+      upper = NA_real_,
+      p = NA_real_
+    ))
+  }
   out <- one_sample %>%
     dplyr::summarise(
       stat = "A1/A0",
@@ -48,10 +64,11 @@ Ratio <- function(one_sample, alpha = 0.05) {
       lower = est * exp(-z * log_se),
       upper = est * exp(+z * log_se),
       se = est * log_se,
-      p = 2 * stats::pnorm(
-        q = abs(log(est)) / log_se,
-        lower.tail = FALSE
-      )
+      p = if (log_se == 0) {
+        if (est == 1) 1 else 0
+      } else {
+        2 * stats::pnorm(q = abs(log(est)) / log_se, lower.tail = FALSE)
+      }
     ) %>% 
     dplyr::select(-log_se)
   return(out)
@@ -101,7 +118,18 @@ DiffRatio <- function(arm0, arm1, alpha = 0.05) {
 #' @param tau Truncation time.
 #' @param time_name Name of column containing the observation time.
 #' @param value_name Name of the column containing the measurement.
-#' @return Data.frame.
+#' @return An object of class `AURMC` containing arm-specific estimates
+#'   and difference and ratio contrasts. Ratio inference is returned as
+#'   `NA` when either arm-specific area is non-positive.
+#' @examples
+#' example_data <- data.frame(
+#'   idx = rep(1:4, each = 2),
+#'   arm = rep(c(0, 0, 1, 1), each = 2),
+#'   time = rep(c(0, 1), 4),
+#'   status = rep(c(1, 0), 4),
+#'   value = rep(c(1, 1, 2, 2), each = 2)
+#' )
+#' CompareAURMCs(example_data, tau = 1)
 #' @export
 CompareAURMCs <- function(
   data,
@@ -117,6 +145,10 @@ CompareAURMCs <- function(
   time_name = "time",
   value_name = "value"
 ) {
+  if (length(alpha) != 1 || !is.finite(alpha) || alpha <= 0 || alpha >= 1) {
+    stop("`alpha` must be a single number strictly between 0 and 1.", call. = FALSE)
+  }
+  int_method <- match.arg(int_method, c("left", "right", "trapezoid"))
   
   # Format input data.
   arm <- idx <- status <- time <- value <- NULL
@@ -128,20 +160,27 @@ CompareAURMCs <- function(
       time = {{time_name}},
       value = {{value_name}}
     )
-  
-  # Convert index to numeric.
-  if (is.factor(data$idx)) {
-    data$idx <- as.numeric(data$idx)
-  }
+
+  ValidateCoreInput(data, check_arm = TRUE)
   
   # Censor after last.
   if (censor_after_last) {
     data <- CensorAfterLast(data)
   }
+
+  # Encode subject identifiers and order records chronologically.
+  data <- PrepareEstimatorInput(data)
   
   # Truncation time.
+  arm_max_time <- tapply(data$time, data$arm, max)
   if (is.null(tau)) {
-    tau <- max(data$time)
+    tau <- min(arm_max_time)
+  }
+  if (length(tau) != 1 || !is.finite(tau) || tau <= 0 || tau > min(arm_max_time)) {
+    stop(
+      "`tau` must be positive and no greater than the maximum follow-up time in either arm.",
+      call. = FALSE
+    )
   }
   
   # Check input.
@@ -151,7 +190,7 @@ CompareAURMCs <- function(
   arm0 <- AURMC(
     data = data %>% dplyr::filter(arm == 0),
     alpha = alpha,
-    censor_after_last = censor_after_last,
+    censor_after_last = FALSE,
     int_method = int_method,
     perturbations = perturbations,
     random_state = random_state,
@@ -163,7 +202,7 @@ CompareAURMCs <- function(
   arm1 <- AURMC(
     data = data %>% dplyr::filter(arm == 1),
     alpha = alpha,
-    censor_after_last = censor_after_last,
+    censor_after_last = FALSE,
     int_method = int_method,
     perturbations = perturbations,
     random_state = random_state,

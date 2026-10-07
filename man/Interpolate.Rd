@@ -32,10 +32,11 @@ an observation-terminating event, either censoring or death.}
 \item{value_name}{Name of the column containing the measurement.}
 }
 \value{
-Data.frame.
+A data.frame containing subject index, status, time, and the
+interpolated value.
 }
 \description{
-Linearly interpolations between each subject's measurements.
+Linearly interpolates between each subject's measurements.
 The input data should contain no missing values.
 }
 \section{Notes}{
@@ -44,3 +45,12 @@ The grid of points will be augmented to include the time of each
 subjects observation terminating event.
 }
 
+\examples{
+example_data <- data.frame(
+  idx = c(1, 1, 2, 2),
+  status = c(1, 0, 1, 2),
+  time = c(0, 1, 0, 1),
+  value = c(0, 1, 0, -1)
+)
+Interpolate(example_data, grid = c(0, 0.5, 1))
+}

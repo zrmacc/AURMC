@@ -4,12 +4,12 @@
 \alias{InfluenceR}
 \title{Influence Function R}
 \usage{
-InfluenceR(idx, status, time, trunc_time, value)
+InfluenceR(idx, status, time, trunc_time, value, int_method = "trapezoid")
 }
 \arguments{
 \item{idx}{Unique subject index.}
 
-\item{status}{Status, coded as 0 for censoring, 1 for event, 2 for terminal event.}
+\item{status}{Status, coded as 0 for censoring, 1 for a measurement, 2 for a terminal event.}
 
 \item{time}{Observation time.}
 
@@ -17,6 +17,8 @@ InfluenceR(idx, status, time, trunc_time, value)
 to the maximum evaluation time.}
 
 \item{value}{Observation value.}
+
+\item{int_method}{Integration method, selected from "left", "right", "trapezoid".}
 }
 \value{
 Data.frame.

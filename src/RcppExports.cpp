@@ -106,8 +106,8 @@ BEGIN_RCPP
 END_RCPP
 }
 // CalcMuR
-SEXP CalcMuR(const arma::colvec d, const arma::colvec surv, const arma::colvec unique_times, const arma::colvec y);
-RcppExport SEXP _AURMC_CalcMuR(SEXP dSEXP, SEXP survSEXP, SEXP unique_timesSEXP, SEXP ySEXP) {
+SEXP CalcMuR(const arma::colvec d, const arma::colvec surv, const arma::colvec unique_times, const arma::colvec y, const std::string int_method);
+RcppExport SEXP _AURMC_CalcMuR(SEXP dSEXP, SEXP survSEXP, SEXP unique_timesSEXP, SEXP ySEXP, SEXP int_methodSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -115,7 +115,8 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< const arma::colvec >::type surv(survSEXP);
     Rcpp::traits::input_parameter< const arma::colvec >::type unique_times(unique_timesSEXP);
     Rcpp::traits::input_parameter< const arma::colvec >::type y(ySEXP);
-    rcpp_result_gen = Rcpp::wrap(CalcMuR(d, surv, unique_times, y));
+    Rcpp::traits::input_parameter< const std::string >::type int_method(int_methodSEXP);
+    rcpp_result_gen = Rcpp::wrap(CalcMuR(d, surv, unique_times, y, int_method));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -135,8 +136,8 @@ BEGIN_RCPP
 END_RCPP
 }
 // InfluenceR
-SEXP InfluenceR(const arma::colvec idx, const arma::colvec status, const arma::colvec time, const double trunc_time, const arma::colvec value);
-RcppExport SEXP _AURMC_InfluenceR(SEXP idxSEXP, SEXP statusSEXP, SEXP timeSEXP, SEXP trunc_timeSEXP, SEXP valueSEXP) {
+SEXP InfluenceR(const arma::colvec idx, const arma::colvec status, const arma::colvec time, const double trunc_time, const arma::colvec value, const std::string int_method);
+RcppExport SEXP _AURMC_InfluenceR(SEXP idxSEXP, SEXP statusSEXP, SEXP timeSEXP, SEXP trunc_timeSEXP, SEXP valueSEXP, SEXP int_methodSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -145,13 +146,14 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< const arma::colvec >::type time(timeSEXP);
     Rcpp::traits::input_parameter< const double >::type trunc_time(trunc_timeSEXP);
     Rcpp::traits::input_parameter< const arma::colvec >::type value(valueSEXP);
-    rcpp_result_gen = Rcpp::wrap(InfluenceR(idx, status, time, trunc_time, value));
+    Rcpp::traits::input_parameter< const std::string >::type int_method(int_methodSEXP);
+    rcpp_result_gen = Rcpp::wrap(InfluenceR(idx, status, time, trunc_time, value, int_method));
     return rcpp_result_gen;
 END_RCPP
 }
 // PerturbationR
-SEXP PerturbationR(const arma::colvec idx, const int perturbations, const arma::colvec status, const arma::colvec time, const double trunc_time, const arma::colvec value);
-RcppExport SEXP _AURMC_PerturbationR(SEXP idxSEXP, SEXP perturbationsSEXP, SEXP statusSEXP, SEXP timeSEXP, SEXP trunc_timeSEXP, SEXP valueSEXP) {
+SEXP PerturbationR(const arma::colvec idx, const int perturbations, const arma::colvec status, const arma::colvec time, const double trunc_time, const arma::colvec value, const std::string int_method);
+RcppExport SEXP _AURMC_PerturbationR(SEXP idxSEXP, SEXP perturbationsSEXP, SEXP statusSEXP, SEXP timeSEXP, SEXP trunc_timeSEXP, SEXP valueSEXP, SEXP int_methodSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -161,7 +163,8 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< const arma::colvec >::type time(timeSEXP);
     Rcpp::traits::input_parameter< const double >::type trunc_time(trunc_timeSEXP);
     Rcpp::traits::input_parameter< const arma::colvec >::type value(valueSEXP);
-    rcpp_result_gen = Rcpp::wrap(PerturbationR(idx, perturbations, status, time, trunc_time, value));
+    Rcpp::traits::input_parameter< const std::string >::type int_method(int_methodSEXP);
+    rcpp_result_gen = Rcpp::wrap(PerturbationR(idx, perturbations, status, time, trunc_time, value, int_method));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -188,10 +191,10 @@ static const R_CallMethodDef CallEntries[] = {
     {"_AURMC_EstimatorR", (DL_FUNC) &_AURMC_EstimatorR, 9},
     {"_AURMC_DrawBootstrapR", (DL_FUNC) &_AURMC_DrawBootstrapR, 4},
     {"_AURMC_BootstrapSamplesR", (DL_FUNC) &_AURMC_BootstrapSamplesR, 10},
-    {"_AURMC_CalcMuR", (DL_FUNC) &_AURMC_CalcMuR, 4},
+    {"_AURMC_CalcMuR", (DL_FUNC) &_AURMC_CalcMuR, 5},
     {"_AURMC_CalcMartingaleR", (DL_FUNC) &_AURMC_CalcMartingaleR, 5},
-    {"_AURMC_InfluenceR", (DL_FUNC) &_AURMC_InfluenceR, 5},
-    {"_AURMC_PerturbationR", (DL_FUNC) &_AURMC_PerturbationR, 6},
+    {"_AURMC_InfluenceR", (DL_FUNC) &_AURMC_InfluenceR, 6},
+    {"_AURMC_PerturbationR", (DL_FUNC) &_AURMC_PerturbationR, 7},
     {"_AURMC_InterpolateR", (DL_FUNC) &_AURMC_InterpolateR, 5},
     {NULL, NULL, 0}
 };

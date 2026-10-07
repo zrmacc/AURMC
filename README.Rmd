@@ -10,15 +10,16 @@ output:
 <!-- badges: end -->
 
 Zachary R. McCaw <br>
-Updated: 2025-07-30
+Updated: 2026-10-06
 
 ```{r global_options, include=FALSE}
-knitr::opts_chunk$set(cache = TRUE)
+knitr::opts_chunk$set(cache = FALSE)
 ```
 
 ## Description
 
-This package performs inference on the area under the repeated measures curve.
+This package estimates and compares areas under repeated-measures curves in the
+presence of censoring and terminal events.
 
 ## Installation
 
@@ -64,7 +65,7 @@ Note that:
 
 ## Interpolation
 
-The function `InterpolateR` *optionally* performs linear interpolation between measurements to enable more precise area estimation. This step can be skipped if interpolation is not meaningful for the outcome of interest, for example the value remains constant between observations. 
+The function `Interpolate` *optionally* performs linear interpolation between measurements to enable more precise area estimation. This step can be skipped if interpolation is not meaningful for the outcome of interest, for example the value remains constant between observations.
 ```{r}
 # Simple example data.
 data <- data.frame(
@@ -137,7 +138,7 @@ data1 <- AURMC::GenData(
   value_mean = 1.0
 )
 data1$arm <- 1
-data1$idx <- nrow(data0) + data1$idx
+data1$idx <- max(data0$idx) + data1$idx
 
 # Overall data set.
 data <- rbind(data0, data1)
@@ -145,7 +146,7 @@ data <- rbind(data0, data1)
 AURMC::CompareAURMCs(data)
 ```
 
-Case of a true differnece:
+Case of a true difference:
 ```{r}
 set.seed(102)
 
@@ -168,7 +169,7 @@ data1 <- AURMC::GenData(
   value_mean = 2.0
 )
 data1$arm <- 1
-data1$idx <- nrow(data0) + data1$idx
+data1$idx <- max(data0$idx) + data1$idx
 
 # Overall data set.
 data <- rbind(data0, data1)
