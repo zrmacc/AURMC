@@ -25,6 +25,10 @@ setClass(
 #'
 #' @param x An object of class \code{AURMC}.
 #' @param ... Unused.
+#' @return Invisibly returns \code{NULL}. This method is called for its side
+#'   effect of displaying the reference-arm, treatment-arm, and contrast tables
+#'   stored in \code{x}, with noninteger numeric values rounded to three
+#'   significant digits.
 #' @export
 print.AURMC <- function(x, ...) {
   

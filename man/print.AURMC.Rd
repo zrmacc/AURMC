@@ -11,6 +11,12 @@
 
 \item{...}{Unused.}
 }
+\value{
+Invisibly returns \code{NULL}. This method is called for its side
+effect of displaying the reference-arm, treatment-arm, and contrast tables
+stored in \code{x}, with noninteger numeric values rounded to three
+significant digits.
+}
 \description{
 Print method for objects of class \code{AURMC}.
 }

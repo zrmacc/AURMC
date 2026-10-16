@@ -5,7 +5,7 @@
 \alias{AURMC-package}
 \title{AURMC: Area Under the Repeated Measures Curve}
 \description{
-Estimates and compares areas under curves formed by repeatedly measured outcomes observed subject to censoring and a terminal event. Implements Kaplan-Meier adjustment for censoring, influence-function standard errors, Wald inference, and multiplier perturbation inference, with utilities for interpolation, simulation, tabulation, and plotting.
+Estimates and compares areas under curves formed by repeatedly measured outcomes observed subject to censoring and a terminal event. Implements Kaplan-Meier adjustment for censoring, influence-function standard errors, Wald inference, and multiplier perturbation inference, with utilities for interpolation, simulation, tabulation, and plotting. For additional details, see: McCaw ZR, Armbruster S, Tian L, Claggett BL, Fitzmaurice G, Foà A, Pfeffer MA, Wei LJ (2026) \doi{10.1016/j.jchf.2026.103013}.
 }
 \seealso{
 Useful links:
